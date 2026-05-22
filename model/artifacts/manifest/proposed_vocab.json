@@ -1,0 +1,533 @@
+{
+  "target": 75,
+  "min_videos": 25,
+  "min_signers": 4,
+  "count": 75,
+  "signs": [
+    {
+      "concept": "DOG",
+      "gloss": "DOG1",
+      "category": "animals",
+      "videos": 45,
+      "signers": 30
+    },
+    {
+      "concept": "RED",
+      "gloss": "RED",
+      "category": "colors",
+      "videos": 32,
+      "signers": 29
+    },
+    {
+      "concept": "WANT",
+      "gloss": "WANT1",
+      "category": "common_verbs",
+      "videos": 32,
+      "signers": 30
+    },
+    {
+      "concept": "ANGRY",
+      "gloss": "ANGRY",
+      "category": "descriptors_feelings",
+      "videos": 32,
+      "signers": 28
+    },
+    {
+      "concept": "EAT",
+      "gloss": "EAT1",
+      "category": "food_drink",
+      "videos": 39,
+      "signers": 29
+    },
+    {
+      "concept": "HELLO",
+      "gloss": "HELLO",
+      "category": "greetings_social",
+      "videos": 32,
+      "signers": 29
+    },
+    {
+      "concept": "MOTHER",
+      "gloss": "MOTHER",
+      "category": "people_family",
+      "videos": 32,
+      "signers": 28
+    },
+    {
+      "concept": "WHO",
+      "gloss": "WHO",
+      "category": "pronouns_question",
+      "videos": 32,
+      "signers": 29
+    },
+    {
+      "concept": "BOOK",
+      "gloss": "BOOK",
+      "category": "school_objects",
+      "videos": 31,
+      "signers": 30
+    },
+    {
+      "concept": "NIGHT",
+      "gloss": "NIGHT1",
+      "category": "time_days",
+      "videos": 39,
+      "signers": 30
+    },
+    {
+      "concept": "CAT",
+      "gloss": "CAT1",
+      "category": "animals",
+      "videos": 30,
+      "signers": 29
+    },
+    {
+      "concept": "GREEN",
+      "gloss": "GREEN",
+      "category": "colors",
+      "videos": 32,
+      "signers": 29
+    },
+    {
+      "concept": "UNDERSTAND",
+      "gloss": "UNDERSTAND",
+      "category": "common_verbs",
+      "videos": 32,
+      "signers": 29
+    },
+    {
+      "concept": "GOOD",
+      "gloss": "GOOD",
+      "category": "descriptors_feelings",
+      "videos": 31,
+      "signers": 30
+    },
+    {
+      "concept": "APPLE",
+      "gloss": "APPLE",
+      "category": "food_drink",
+      "videos": 32,
+      "signers": 31
+    },
+    {
+      "concept": "NAME",
+      "gloss": "NAME",
+      "category": "greetings_social",
+      "videos": 32,
+      "signers": 29
+    },
+    {
+      "concept": "BROTHER",
+      "gloss": "BROTHER",
+      "category": "people_family",
+      "videos": 32,
+      "signers": 29
+    },
+    {
+      "concept": "WHAT",
+      "gloss": "WHAT1",
+      "category": "pronouns_question",
+      "videos": 32,
+      "signers": 27
+    },
+    {
+      "concept": "PAPER",
+      "gloss": "PAPER",
+      "category": "school_objects",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "MORNING",
+      "gloss": "MORNING",
+      "category": "time_days",
+      "videos": 32,
+      "signers": 29
+    },
+    {
+      "concept": "BIRD",
+      "gloss": "BIRD",
+      "category": "animals",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "BLUE",
+      "gloss": "BLUE",
+      "category": "colors",
+      "videos": 31,
+      "signers": 27
+    },
+    {
+      "concept": "WORK",
+      "gloss": "WORK",
+      "category": "common_verbs",
+      "videos": 32,
+      "signers": 28
+    },
+    {
+      "concept": "HAPPY",
+      "gloss": "HAPPY",
+      "category": "descriptors_feelings",
+      "videos": 31,
+      "signers": 28
+    },
+    {
+      "concept": "DRINK",
+      "gloss": "DRINK1",
+      "category": "food_drink",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "PLEASE",
+      "gloss": "PLEASE",
+      "category": "greetings_social",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "BOY",
+      "gloss": "BOY",
+      "category": "people_family",
+      "videos": 32,
+      "signers": 29
+    },
+    {
+      "concept": "WHY",
+      "gloss": "WHY",
+      "category": "pronouns_question",
+      "videos": 32,
+      "signers": 29
+    },
+    {
+      "concept": "PEN",
+      "gloss": "PEN",
+      "category": "school_objects",
+      "videos": 31,
+      "signers": 30
+    },
+    {
+      "concept": "WEEK",
+      "gloss": "WEEK",
+      "category": "time_days",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "FISH",
+      "gloss": "FISH",
+      "category": "animals",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "YELLOW",
+      "gloss": "YELLOW",
+      "category": "colors",
+      "videos": 31,
+      "signers": 27
+    },
+    {
+      "concept": "PLAY",
+      "gloss": "PLAY",
+      "category": "common_verbs",
+      "videos": 32,
+      "signers": 29
+    },
+    {
+      "concept": "SICK",
+      "gloss": "SICK",
+      "category": "descriptors_feelings",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "MILK",
+      "gloss": "MILK1",
+      "category": "food_drink",
+      "videos": 30,
+      "signers": 29
+    },
+    {
+      "concept": "HELP",
+      "gloss": "HELP",
+      "category": "greetings_social",
+      "videos": 31,
+      "signers": 27
+    },
+    {
+      "concept": "WOMAN",
+      "gloss": "WOMAN1",
+      "category": "people_family",
+      "videos": 32,
+      "signers": 29
+    },
+    {
+      "concept": "WHICH",
+      "gloss": "WHICH",
+      "category": "pronouns_question",
+      "videos": 32,
+      "signers": 29
+    },
+    {
+      "concept": "PENCIL",
+      "gloss": "PENCIL",
+      "category": "school_objects",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "YEAR",
+      "gloss": "YEAR",
+      "category": "time_days",
+      "videos": 31,
+      "signers": 30
+    },
+    {
+      "concept": "COW",
+      "gloss": "COW",
+      "category": "animals",
+      "videos": 30,
+      "signers": 28
+    },
+    {
+      "concept": "BLACK",
+      "gloss": "BLACK",
+      "category": "colors",
+      "videos": 31,
+      "signers": 30
+    },
+    {
+      "concept": "FINISH",
+      "gloss": "FINISH",
+      "category": "common_verbs",
+      "videos": 32,
+      "signers": 29
+    },
+    {
+      "concept": "BIG",
+      "gloss": "BIG",
+      "category": "descriptors_feelings",
+      "videos": 31,
+      "signers": 30
+    },
+    {
+      "concept": "BREAD",
+      "gloss": "BREAD",
+      "category": "food_drink",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "WELCOME",
+      "gloss": "WELCOME1",
+      "category": "greetings_social",
+      "videos": 31,
+      "signers": 30
+    },
+    {
+      "concept": "SISTER",
+      "gloss": "SISTER",
+      "category": "people_family",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "WHERE",
+      "gloss": "WHERE",
+      "category": "pronouns_question",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "DOOR",
+      "gloss": "DOOR",
+      "category": "school_objects",
+      "videos": 31,
+      "signers": 28
+    },
+    {
+      "concept": "TIME",
+      "gloss": "TIME",
+      "category": "time_days",
+      "videos": 31,
+      "signers": 30
+    },
+    {
+      "concept": "HORSE",
+      "gloss": "HORSE",
+      "category": "animals",
+      "videos": 29,
+      "signers": 28
+    },
+    {
+      "concept": "ORANGE",
+      "gloss": "ORANGE",
+      "category": "colors",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "GO",
+      "gloss": "GO",
+      "category": "common_verbs",
+      "videos": 31,
+      "signers": 28
+    },
+    {
+      "concept": "SMALL",
+      "gloss": "SMALL",
+      "category": "descriptors_feelings",
+      "videos": 31,
+      "signers": 27
+    },
+    {
+      "concept": "BANANA",
+      "gloss": "BANANA1",
+      "category": "food_drink",
+      "videos": 31,
+      "signers": 28
+    },
+    {
+      "concept": "SORRY",
+      "gloss": "SORRY",
+      "category": "greetings_social",
+      "videos": 30,
+      "signers": 28
+    },
+    {
+      "concept": "BABY",
+      "gloss": "BABY1",
+      "category": "people_family",
+      "videos": 30,
+      "signers": 29
+    },
+    {
+      "concept": "WHEN",
+      "gloss": "WHEN",
+      "category": "pronouns_question",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "COMPUTER",
+      "gloss": "COMPUTER",
+      "category": "school_objects",
+      "videos": 30,
+      "signers": 29
+    },
+    {
+      "concept": "TODAY",
+      "gloss": "TODAY",
+      "category": "time_days",
+      "videos": 30,
+      "signers": 28
+    },
+    {
+      "concept": "PURPLE",
+      "gloss": "PURPLE",
+      "category": "colors",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "KNOW",
+      "gloss": "KNOW",
+      "category": "common_verbs",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "HOT",
+      "gloss": "HOT",
+      "category": "descriptors_feelings",
+      "videos": 31,
+      "signers": 27
+    },
+    {
+      "concept": "HUNGRY",
+      "gloss": "HUNGRY",
+      "category": "food_drink",
+      "videos": 31,
+      "signers": 30
+    },
+    {
+      "concept": "YES",
+      "gloss": "YES",
+      "category": "greetings_social",
+      "videos": 30,
+      "signers": 26
+    },
+    {
+      "concept": "MAN",
+      "gloss": "MAN",
+      "category": "people_family",
+      "videos": 31,
+      "signers": 30
+    },
+    {
+      "concept": "HOW",
+      "gloss": "HOW1",
+      "category": "pronouns_question",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "TABLE",
+      "gloss": "TABLE",
+      "category": "school_objects",
+      "videos": 30,
+      "signers": 29
+    },
+    {
+      "concept": "TOMORROW",
+      "gloss": "TOMORROW",
+      "category": "time_days",
+      "videos": 30,
+      "signers": 28
+    },
+    {
+      "concept": "PINK",
+      "gloss": "PINK",
+      "category": "colors",
+      "videos": 31,
+      "signers": 29
+    },
+    {
+      "concept": "LEARN",
+      "gloss": "LEARN",
+      "category": "common_verbs",
+      "videos": 31,
+      "signers": 30
+    },
+    {
+      "concept": "COLD",
+      "gloss": "COLD",
+      "category": "descriptors_feelings",
+      "videos": 31,
+      "signers": 28
+    },
+    {
+      "concept": "COOK",
+      "gloss": "COOK",
+      "category": "food_drink",
+      "videos": 31,
+      "signers": 27
+    },
+    {
+      "concept": "NO",
+      "gloss": "NO",
+      "category": "greetings_social",
+      "videos": 30,
+      "signers": 30
+    },
+    {
+      "concept": "CHILD",
+      "gloss": "CHILD",
+      "category": "people_family",
+      "videos": 31,
+      "signers": 27
+    }
+  ]
+}

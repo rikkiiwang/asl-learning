@@ -1,0 +1,110 @@
+<h2>UI design direction</h2>
+<p class="subtitle">Three visual directions for the whole app, shown on the dashboard (entry screen). Same content — progress bar, Start practice, recent history — styled three ways. Pick a direction and I'll apply it across dashboard + practice + result screens. Visual polish only; the flow stays as built.</p>
+
+<style>
+  .row { display:flex; gap:18px; flex-wrap:wrap; }
+  .mk { flex:1; min-width:250px; border-radius:14px; overflow:hidden; border:1px solid #e3e6ea; }
+  .mk h4 { margin:0; }
+  .bar { display:flex; height:12px; border-radius:999px; overflow:hidden; }
+  .recent { font-size:12px; display:flex; align-items:center; gap:7px; padding:5px 0; }
+  .dotp { width:7px;height:7px;border-radius:50%; }
+  .btn { display:inline-block; border:none; font-weight:700; cursor:default; }
+
+  /* A — Calm educational */
+  .A { background:#f5f9f7; font-family:ui-rounded,'Nunito',system-ui,sans-serif; padding:18px; color:#1f3b34; }
+  .A .title { font-size:18px; font-weight:800; }
+  .A .sub { font-size:12px; color:#5b7d74; }
+  .A .btn { background:#16a085; color:#fff; border-radius:12px; padding:11px 18px; margin-top:14px; box-shadow:0 4px 12px #16a08533; }
+  .A .card { background:#fff; border-radius:14px; padding:14px; margin-top:14px; box-shadow:0 2px 10px #0c3b2e0d; }
+
+  /* B — Focused minimal */
+  .B { background:#fff; font-family:'Inter',system-ui,sans-serif; padding:18px; color:#15181c; }
+  .B .title { font-size:17px; font-weight:650; letter-spacing:-.01em; }
+  .B .sub { font-size:12px; color:#8a9099; }
+  .B .btn { background:#111418; color:#fff; border-radius:8px; padding:10px 16px; margin-top:14px; font-weight:600; }
+  .B .card { border:1px solid #eceef1; border-radius:10px; padding:14px; margin-top:14px; }
+  .B hr { border:none; border-top:1px solid #f0f1f3; margin:6px 0; }
+
+  /* C — Playful gamified */
+  .C { background:linear-gradient(160deg,#f3f0ff,#fef0f7); font-family:'Poppins',system-ui,sans-serif; padding:18px; color:#2a1f4a; }
+  .C .title { font-size:18px; font-weight:800; }
+  .C .sub { font-size:12px; color:#7a6ca8; }
+  .C .btn { background:linear-gradient(90deg,#7c4dff,#b14dff); color:#fff; border-radius:999px; padding:12px 20px; margin-top:14px; box-shadow:0 6px 16px #7c4dff44; }
+  .C .card { background:#ffffffcc; border-radius:16px; padding:14px; margin-top:14px; box-shadow:0 4px 14px #6d4aff1a; }
+  .C .pill { display:inline-block; background:#ffd54a; color:#5a3d00; font-size:11px; font-weight:800; border-radius:999px; padding:2px 9px; }
+</style>
+
+<div class="row">
+  <!-- A -->
+  <div class="mk">
+    <div class="A">
+      <div class="title">ASL Practice</div>
+      <div class="sub">Keep going — you're learning!</div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><b>Your progress</b><span>32% mastered</span></div>
+        <div class="bar" style="background:#e3efeb;"><div style="width:32%;background:#16a085;"></div><div style="width:18%;background:#7fd1bd;"></div><div style="width:50%;background:#dfe9e5;"></div></div>
+        <div style="font-size:11px;color:#5b7d74;margin-top:6px;">24 mastered · 14 learning · 37 to go</div>
+      </div>
+      <button class="btn">Start practice</button>
+      <div class="card">
+        <div style="font-size:12px;font-weight:800;">Recent practice</div>
+        <div class="recent"><span class="dotp" style="background:#16a085;"></span><b>MILK</b> passed <span style="margin-left:auto;color:#9bb3ab;">2m ago</span></div>
+        <div class="recent"><span class="dotp" style="background:#e07a5f;"></span><b>BOOK</b> missed <span style="margin-left:auto;color:#9bb3ab;">5m ago</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B -->
+  <div class="mk">
+    <div class="B">
+      <div class="title">ASL Practice</div>
+      <div class="sub">Beginner vocabulary</div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><b>Progress</b><span style="color:#8a9099;">32%</span></div>
+        <div class="bar" style="background:#f0f1f3;height:8px;"><div style="width:32%;background:#111418;"></div><div style="width:18%;background:#9aa0a8;"></div><div style="width:50%;background:#e8eaed;"></div></div>
+        <div style="font-size:11px;color:#8a9099;margin-top:6px;">24 mastered · 14 learning · 37 to go</div>
+      </div>
+      <button class="btn">Start practice</button>
+      <div class="card">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#8a9099;">Recent</div>
+        <div class="recent"><span class="dotp" style="background:#111418;"></span>MILK <span style="color:#8a9099;">passed</span><span style="margin-left:auto;color:#b6bbc2;">2m</span></div>
+        <hr><div class="recent"><span class="dotp" style="background:#d1495b;"></span>BOOK <span style="color:#8a9099;">missed</span><span style="margin-left:auto;color:#b6bbc2;">5m</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C -->
+  <div class="mk">
+    <div class="C">
+      <div style="display:flex;align-items:center;gap:8px;"><div class="title">ASL Practice</div><span class="pill">🔥 3 day</span></div>
+      <div class="sub">Level up your signs!</div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><b>Your progress</b><span>32%</span></div>
+        <div class="bar" style="background:#ece7fb;height:14px;"><div style="width:32%;background:#7c4dff;"></div><div style="width:18%;background:#ffb14d;"></div><div style="width:50%;background:#e4def7;"></div></div>
+        <div style="font-size:11px;color:#7a6ca8;margin-top:6px;">24 mastered · 14 learning · 37 to go</div>
+      </div>
+      <button class="btn">▶ Start practice</button>
+      <div class="card">
+        <div style="font-size:12px;font-weight:800;">Recent 🏅</div>
+        <div class="recent"><span class="dotp" style="background:#22c55e;"></span><b>MILK</b> ✓ <span style="margin-left:auto;color:#a99ccf;">2m ago</span></div>
+        <div class="recent"><span class="dotp" style="background:#fb7185;"></span><b>BOOK</b> ✗ <span style="margin-left:auto;color:#a99ccf;">5m ago</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>Which direction?</h3>
+<div class="options">
+  <div class="option" data-choice="calm" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content"><h3>Calm educational</h3><p>Soft teal/green, rounded, generous whitespace, friendly. Reads as a supportive learning tool. Easy on the eyes for repeated practice.</p></div>
+  </div>
+  <div class="option" data-choice="minimal" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content"><h3>Focused minimal</h3><p>Near-monochrome, crisp, one accent, compact. Gets out of the way; feels like a precise tool. Fastest to build and very legible.</p></div>
+  </div>
+  <div class="option" data-choice="playful" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content"><h3>Playful gamified</h3><p>Vibrant gradient, streak/badge accents, chunky rounded. Motivating and fun; risks feeling less serious for a classroom pilot.</p></div>
+  </div>
+</div>

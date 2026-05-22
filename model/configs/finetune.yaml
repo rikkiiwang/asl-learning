@@ -1,0 +1,24 @@
+# Fine-tune the 75-class head on the pretrained encoder.
+cache: artifacts/cache/clips.npz
+norm: artifacts/manifest/norm.json
+manifest: artifacts/manifest/manifest.json
+
+pretrained_encoder: artifacts/checkpoints/pretrain/encoder.pt
+
+head: attn
+emb: 384
+width: 48
+dropout: 0.3
+tf_layers: 1
+tf_heads: 4
+
+epochs: 60
+batch_size: 32
+lr: 0.0015          # lower than from-scratch — encoder is already trained
+weight_decay: 0.05
+warmup_epochs: 3
+label_smoothing: 0.1
+early_stop_patience: 12
+seed: 1337
+
+out_dir: artifacts/checkpoints/finetune

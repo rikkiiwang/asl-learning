@@ -1,0 +1,90 @@
+<h2>Practice screen layout</h2>
+<p class="subtitle">Each wireframe shows the same moment — a <strong>failed attempt</strong> — because that state has to surface the most at once (Req 14): the prompted word, live camera, attempt result, a targeted hint, the reference-clip option, and retry / skip / next. This is a laptop/desktop webcam app. Look at the three structures, then pick the one that feels right at the bottom.</p>
+
+<style>
+  .wf { border:1px solid var(--border,#d0d0d0); border-radius:10px; overflow:hidden; background:#fff; }
+  .wf-top { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#f3f4f6; border-bottom:1px solid #e5e7eb; font-weight:600; }
+  .wf-top .prog { font-weight:500; opacity:.7; font-size:13px; }
+  .cam { position:relative; background:#1f2430; color:#aab; display:flex; align-items:center; justify-content:center; min-height:150px; }
+  .cam .frameguide { position:absolute; inset:14px; border:2px dashed #5b6b8c; border-radius:8px; }
+  .cam .camlabel { font-size:12px; letter-spacing:.05em; opacity:.7; z-index:1; }
+  .fail { color:#b42318; font-weight:600; }
+  .hint { background:#fff8e6; border:1px solid #f5d98b; border-radius:8px; padding:8px 10px; font-size:13px; }
+  .btnrow { display:flex; gap:8px; flex-wrap:wrap; }
+  .b { border:1px solid #c7ccd6; border-radius:7px; padding:7px 12px; font-size:13px; background:#fff; }
+  .b.primary { background:#2563eb; color:#fff; border-color:#2563eb; }
+  .b.ghost { background:#f3f4f6; }
+  .pad { padding:14px; display:flex; flex-direction:column; gap:10px; }
+  .twocol { display:flex; }
+  .twocol > .left { flex:1; padding:14px; display:flex; flex-direction:column; gap:10px; border-right:1px solid #eee; }
+  .twocol > .right { flex:1.1; padding:14px; display:flex; flex-direction:column; gap:10px; }
+  .label2 { font-size:11px; text-transform:uppercase; letter-spacing:.06em; opacity:.55; }
+  .dots span { display:inline-block; width:9px; height:9px; border-radius:50%; background:#d0d4dc; margin-right:4px; }
+  .dots span.on { background:#22a06b; }
+  .dots span.cur { background:#2563eb; }
+</style>
+
+<div class="section">
+  <div class="label">Option A — Camera-centric (single column)</div>
+  <div class="wf">
+    <div class="wf-top"><span>Sign: <span style="font-size:20px">“MILK”</span></span><span class="prog">Word 3 of 10</span></div>
+    <div class="cam"><div class="frameguide"></div><span class="camlabel">LIVE CAMERA · framing guide overlay</span></div>
+    <div class="pad">
+      <div class="fail">✗ Not quite — let's try again</div>
+      <div class="hint">💡 Hint: MILK is a repeated <em>squeeze</em> — open and close your fist a couple times.</div>
+      <div class="btnrow"><button class="b primary">↻ Retry</button><button class="b">▶ Show example</button><button class="b ghost">Skip →</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">Option B — Split: feedback left, camera right</div>
+  <div class="wf">
+    <div class="wf-top"><span>Sign: <span style="font-size:20px">“MILK”</span></span><span class="prog">Word 3 of 10</span></div>
+    <div class="twocol">
+      <div class="left">
+        <div class="label2">Result</div>
+        <div class="fail">✗ Not quite</div>
+        <div class="hint">💡 MILK is a repeated <em>squeeze</em> — open & close your fist.</div>
+        <button class="b">▶ Show example clip</button>
+        <div class="label2" style="margin-top:6px">Session</div>
+        <div class="dots"><span class="on"></span><span class="on"></span><span class="cur"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="btnrow" style="margin-top:auto"><button class="b primary">↻ Retry</button><button class="b ghost">Skip →</button></div>
+      </div>
+      <div class="right">
+        <div class="cam" style="min-height:200px"><div class="frameguide"></div><span class="camlabel">LIVE CAMERA · framing guide</span></div>
+        <button class="b primary" style="align-self:center">● Record (2s)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">Option C — Guided single card (one thing at a time)</div>
+  <div class="wf" style="max-width:340px; margin:0 auto;">
+    <div class="pad" style="align-items:center; text-align:center;">
+      <div class="prog" style="opacity:.6; font-size:13px;">Word 3 of 10</div>
+      <div style="font-size:22px; font-weight:700;">“MILK”</div>
+      <div class="cam" style="width:100%; min-height:110px; border-radius:8px;"><div class="frameguide" style="inset:8px;"></div><span class="camlabel">camera thumbnail</span></div>
+      <div class="fail">✗ Not quite</div>
+      <div class="hint">💡 Repeated squeeze — open & close your fist.</div>
+      <div class="btnrow" style="justify-content:center;"><button class="b primary">↻ Retry</button><button class="b">▶ Example</button><button class="b ghost">Skip</button></div>
+    </div>
+  </div>
+</div>
+
+<h3>Which structure fits best?</h3>
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content"><h3>Camera-centric</h3><p>Big camera is the hero; prompt in a header, feedback stacked below. Simplest, keeps self-positioning front and center. Hint appears under the camera.</p></div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content"><h3>Split (feedback + camera)</h3><p>Read the hint and watch the example clip <em>while</em> seeing your own camera side by side. Best use of laptop width; a bit denser.</p></div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content"><h3>Guided single card</h3><p>One focused card that changes by state (prompt → countdown → result → hint). Least overwhelming for true beginners; smaller camera, less info at once.</p></div>
+  </div>
+</div>

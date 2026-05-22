@@ -1,0 +1,93 @@
+<h2>Floating-overlay layout (your version)</h2>
+<p class="subtitle">Big centered camera as the stage. Floating prompt pill at top-center, slim vertical control rail on the left (Start / Retry). Below: the recording state and a failed-attempt state. The one open question is where the <strong>feedback</strong> (result + hint + example + next/skip) should float — pick at the bottom.</p>
+
+<style>
+  .stage { position:relative; background:#1f2430; border-radius:12px; min-height:360px; overflow:hidden; color:#cdd4e0; }
+  .stage .guide { position:absolute; inset:34px 90px; border:2px dashed #4d5b7c; border-radius:10px; }
+  .stage .camnote { position:absolute; bottom:10px; right:14px; font-size:11px; letter-spacing:.05em; opacity:.55; }
+  /* top-center prompt pill */
+  .prompt-pill { position:absolute; top:16px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,.96); color:#111; border-radius:999px; padding:8px 20px; text-align:center; box-shadow:0 4px 16px rgba(0,0,0,.25); min-width:200px; }
+  .prompt-pill .w { font-size:22px; font-weight:700; line-height:1.1; }
+  .prompt-pill .sub { font-size:11px; opacity:.6; margin-top:2px; }
+  .prompt-pill.empty .w { color:#9aa1ad; font-size:15px; font-weight:600; }
+  /* left rail */
+  .rail { position:absolute; top:50%; left:14px; transform:translateY(-50%); display:flex; flex-direction:column; gap:10px; width:104px; }
+  .rail .rb { border:none; border-radius:10px; padding:12px 8px; font-size:13px; font-weight:600; text-align:center; box-shadow:0 3px 10px rgba(0,0,0,.25); }
+  .rb.start { background:#e23b3b; color:#fff; }
+  .rb.recording { background:#fff; color:#e23b3b; border:2px solid #e23b3b; }
+  .rb.retry { background:rgba(255,255,255,.95); color:#222; }
+  .rb.retry.dim { opacity:.45; }
+  .dot { display:inline-block; width:9px; height:9px; border-radius:50%; background:#e23b3b; margin-right:6px; vertical-align:middle; }
+  .ring { display:inline-block; width:9px; height:9px; border-radius:50%; border:2px solid #fff; margin-right:6px; vertical-align:middle; }
+  /* floating feedback */
+  .fb { position:absolute; left:50%; transform:translateX(-50%); bottom:16px; background:rgba(255,255,255,.97); color:#111; border-radius:12px; padding:12px 16px; box-shadow:0 6px 20px rgba(0,0,0,.3); width:74%; max-width:520px; }
+  .fb .res { font-weight:700; color:#b42318; }
+  .fb .hint { font-size:13px; margin:6px 0 10px; }
+  .fb .row { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .mini { border:1px solid #c7ccd6; border-radius:7px; padding:6px 12px; font-size:13px; background:#fff; }
+  .mini.primary { background:#2563eb; color:#fff; border-color:#2563eb; }
+  .cap { font-size:12px; opacity:.7; margin:6px 0 14px; }
+  .grid2 { display:flex; gap:16px; flex-wrap:wrap; }
+  .grid2 > div { flex:1; min-width:280px; }
+</style>
+
+<div class="section">
+  <div class="label">1 — Ready state (before recording)</div>
+  <div class="stage">
+    <div class="guide"></div>
+    <div class="prompt-pill"><div class="w">“MILK”</div><div class="sub">Sign this word, then press Record</div></div>
+    <div class="rail">
+      <button class="rb start"><span class="dot"></span>Start recording</button>
+      <button class="rb retry dim">↻ Retry</button>
+    </div>
+    <span class="camnote">LIVE CAMERA · framing guide</span>
+  </div>
+  <div class="cap">Prompt pill floats top-center; before a word loads it can read a placeholder like <em>“Your word will appear here.”</em> Retry is dimmed until there's an attempt to retry.</div>
+</div>
+
+<div class="grid2">
+  <div>
+    <div class="label">2 — Recording (button toggles)</div>
+    <div class="stage" style="min-height:300px">
+      <div class="guide"></div>
+      <div class="prompt-pill"><div class="w">“MILK”</div><div class="sub">Recording… hold your sign</div></div>
+      <div class="rail">
+        <button class="rb recording"><span class="ring"></span>● Recording 0:02</button>
+        <button class="rb retry dim">↻ Retry</button>
+      </div>
+      <span class="camnote">REC ●</span>
+    </div>
+  </div>
+  <div>
+    <div class="label">3 — Failed attempt (feedback floats in)</div>
+    <div class="stage" style="min-height:300px">
+      <div class="guide" style="inset:24px 70px"></div>
+      <div class="prompt-pill"><div class="w">“MILK”</div></div>
+      <div class="rail">
+        <button class="rb start"><span class="dot"></span>Start recording</button>
+        <button class="rb retry">↻ Retry</button>
+      </div>
+      <div class="fb">
+        <div class="res">✗ Not quite</div>
+        <div class="hint">💡 MILK is a repeated squeeze — open & close your fist a couple times.</div>
+        <div class="row"><button class="mini primary">↻ Retry</button><button class="mini">▶ Show example</button><button class="mini">Skip →</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>Where should the feedback (result + hint + example + skip/next) float?</h3>
+<div class="options">
+  <div class="option" data-choice="bottom" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content"><h3>Bottom-center overlay</h3><p>Feedback card floats over the lower part of the camera (as drawn in state 3). Keeps the camera the hero; doesn't crowd the prompt or the rail.</p></div>
+  </div>
+  <div class="option" data-choice="rail" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content"><h3>Extend the left rail</h3><p>Result + hint + example stack into the same left rail below the buttons. Everything controls-related lives in one column; rail gets taller.</p></div>
+  </div>
+  <div class="option" data-choice="under-prompt" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content"><h3>Under the prompt pill</h3><p>Result + hint drop down from the top-center prompt; actions stay on the left rail. Keeps eyes near the word.</p></div>
+  </div>
+</div>

@@ -1,0 +1,78 @@
+<h2>End-to-end architecture</h2>
+<p class="subtitle">Everything we've decided, integrated. The key invariant is drawn explicitly: camera frames and inference stay inside the browser; only outcome metadata crosses to Supabase.</p>
+
+<style>
+  .zones { display:flex; gap:18px; align-items:stretch; flex-wrap:wrap; }
+  .zone { border:2px solid #c7ccd6; border-radius:12px; padding:14px; background:#fff; flex:1; min-width:300px; }
+  .zone.browser { border-color:#2563eb; }
+  .zone.supa { border-color:#22a06b; flex:0.8; }
+  .zhead { font-weight:700; font-size:15px; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .zhead .tag { font-size:11px; font-weight:600; padding:2px 8px; border-radius:999px; }
+  .browser .tag { background:#e8f0ff; color:#2563eb; }
+  .supa .tag { background:#e6f6ee; color:#1a7f54; }
+  .box { border:1px solid #d7dbe2; border-radius:9px; padding:9px 11px; margin-bottom:9px; background:#fafbfc; }
+  .box .bt { font-weight:600; font-size:13px; margin-bottom:3px; }
+  .box .bd { font-size:12px; opacity:.75; line-height:1.4; }
+  .pipe { font-family:monospace; font-size:11.5px; background:#1f2430; color:#cdd4e0; border-radius:7px; padding:8px 10px; margin-bottom:9px; }
+  .flowrow { display:flex; align-items:center; justify-content:center; gap:10px; margin:14px 0; flex-wrap:wrap; }
+  .arrow { font-size:13px; padding:8px 12px; border-radius:8px; font-weight:600; }
+  .arrow.meta { background:#e6f6ee; color:#1a7f54; border:1px solid #b6e3cc; }
+  .arrow.auth { background:#eef0f3; color:#444; border:1px solid #d7dbe2; }
+  .barrier { background:#fdecec; color:#b42318; border:1px dashed #e9a3a0; border-radius:8px; padding:8px 12px; font-weight:600; font-size:13px; text-align:center; margin:6px 0 16px; }
+  .artifact { border:1px dashed #b48a3a; background:#fdf7e9; border-radius:9px; padding:9px 11px; font-size:12px; }
+  .loop { counter-reset:step; }
+  .loop .s { display:flex; gap:10px; padding:7px 0; border-bottom:1px dashed #e5e7eb; font-size:13px; }
+  .loop .s:before { counter-increment:step; content:counter(step); background:#2563eb; color:#fff; min-width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
+  .pf { font-size:12px; }
+  .pf .p { color:#1a7f54; font-weight:600; } .pf .f { color:#b42318; font-weight:600; }
+</style>
+
+<div class="artifact">📦 <strong>Model artifact</strong> (2–6&nbsp;MB, trained from scratch — see <code>vision-model-plan.md</code>) is served as a <strong>static asset / CDN file</strong>, downloaded once into the browser and cached. Versioned; the app pins a specific version.</div>
+
+<div class="flowrow"><span style="font-size:12px; opacity:.6">⬇ loaded once into ⬇</span></div>
+
+<div class="zones">
+  <div class="zone browser">
+    <div class="zhead">🖥️ Browser (client SPA) <span class="tag">React + Vite · recommended</span></div>
+    <div class="box"><div class="bt">UI screens</div><div class="bd">Auth · Onboarding/camera check + framing guide · Practice (floating-overlay layout) · Progress dashboard</div></div>
+    <div class="box"><div class="bt">Capture</div><div class="bd"><code>getUserMedia</code> → fixed ~2s window (countdown) → sample 8–12 frames → preprocess</div></div>
+    <div class="pipe">frames → in-browser model (ONNX Runtime Web / TF.js)<br>→ logits → softmax → per-class threshold + margin<br>→ PASS / FAIL → rule-based hint on fail</div>
+    <div class="box"><div class="bt">Session orchestrator</div><div class="bd">Fetches signs + sign_mastery → builds mastery-prioritized ~10-word deck → runs the loop → writes attempts</div></div>
+  </div>
+
+  <div class="zone supa">
+    <div class="zhead">☁️ Supabase <span class="tag">BaaS</span></div>
+    <div class="box"><div class="bt">Auth</div><div class="bd">Email login; accounts persist across devices/sessions</div></div>
+    <div class="box"><div class="bt">Postgres + RLS</div><div class="bd"><code>signs</code> · <code>sessions</code> · <code>attempts</code> · <code>sign_mastery</code><br>Row-level security per <code>auth.uid()</code>; mastery trigger on attempt insert</div></div>
+  </div>
+</div>
+
+<div class="flowrow">
+  <span class="arrow auth">🔑 login ⇄ Auth</span>
+  <span class="arrow meta">📊 metadata only → Postgres<br><span style="font-weight:400; font-size:11px">result · confidence · margin · sign_id · timestamps</span></span>
+</div>
+
+<div class="barrier">🚫 Camera frames + inference never leave the browser — there is no upload code path (Req&nbsp;5 &amp; 13, by construction)</div>
+
+<h3>Session loop (orchestration)</h3>
+<div class="loop">
+  <div class="s">Login → Progress dashboard (overview of mastery + recent history)</div>
+  <div class="s">Start session → create <code>sessions</code> row → camera check + framing guide</div>
+  <div class="s">Fetch mastery-prioritized deck (~10 words: not-mastered first + a couple reviews)</div>
+  <div class="s">Per word: show prompt → countdown → record 2s → infer → decide</div>
+  <div class="s"><span class="pf"><span class="p">PASS</span> → log attempt → advance &nbsp;·&nbsp; <span class="f">FAIL</span> → hint → retry; after ~2–3 fails offer reference clip; Skip allowed</span></div>
+  <div class="s">Every capture writes an <code>attempts</code> row → DB trigger updates <code>sign_mastery</code> (2 first-try passes across sessions = mastered)</div>
+  <div class="s">End session → set <code>ended_at</code> → summary (mastered / accuracy) → deck re-prioritizes next time</div>
+</div>
+
+<h3>Look right?</h3>
+<div class="options">
+  <div class="option" data-choice="approve" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content"><h3>Architecture looks right</h3><p>Approve the integrated design; ready to write it into the spec.</p></div>
+  </div>
+  <div class="option" data-choice="changes" onclick="toggleSelect(this)">
+    <div class="letter">✎</div>
+    <div class="content"><h3>Want changes</h3><p>Something to adjust — tell me in the terminal.</p></div>
+  </div>
+</div>

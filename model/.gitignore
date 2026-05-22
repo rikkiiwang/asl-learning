@@ -1,0 +1,18 @@
+# Raw dataset, partial downloads, preprocessed tensor caches — never commit
+data/
+*.zip
+*.zip.download/
+download.log
+
+# Preprocessed caches / large artifacts (keep configs + manifests + reports only)
+artifacts/cache/
+artifacts/checkpoints/
+*.onnx
+*.pt
+*.pth
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
