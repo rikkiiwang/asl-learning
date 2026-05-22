@@ -28,7 +28,7 @@ def export_combined(out_path) -> Path:
 
 
 def main():
-    art = Path(__file__).resolve().parents[4] / "artifacts"
+    art = Path(__file__).resolve().parents[3] / "artifacts"
     art.mkdir(parents=True, exist_ok=True)
     decision = art / "export_decision.md"
     try:
