@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aslv2"
+version = "0.0.1"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.2", "numpy", "opencv-python", "pyyaml",
+    "onnx", "onnxruntime", "torchvision", "tqdm",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
