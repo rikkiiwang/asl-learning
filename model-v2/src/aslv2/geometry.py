@@ -56,6 +56,8 @@ def slot_hands(frames: list[np.ndarray], head_cx: float, gate: float = 80.0):
             if i not in used:
                 tracks.append({"last": cents[i], "rows": {f: boxes[i]},
                                "xs": [cents[i, 0]]})
+    # cap is applied post-hoc: a 3rd object appearing mid-clip participates in
+    # matching until the clip ends, then the two best-supported tracks are kept
     if len(tracks) > 2:
         tracks = sorted(tracks, key=lambda t: -len(t["rows"]))[:2]
 
@@ -105,7 +107,7 @@ def normalize_geometry(kps: np.ndarray, present: np.ndarray,
             hc = kps[s].mean(axis=0)
             hand_centers[s] = hc
             hand2head[s] = (hc - center) / hs
-    if present[0] > 0 and present[1] > 0:
+    if not np.any(np.isnan(hand_centers)):
         hand2hand = (hand_centers[1] - hand_centers[0]) / hs
     else:
         hand2hand = np.zeros(2)

@@ -41,3 +41,12 @@ def test_missing_slot_is_zeroed_and_flagged():
     # right-hand keypoint block (slot 1: indices 42..84) must be all zeros
     assert np.all(v[42:84] == 0.0)
     assert not np.isnan(v).any()
+
+
+def test_present_slot_with_nan_keypoints_never_leaks_nan():
+    kps, present, head = _inputs()
+    present[0] = 1.0
+    kps[1] = np.nan
+    present[1] = 1.0                       # present, but keypoints unknown (occluded)
+    v = normalize_geometry(kps, present, head, 1.0)
+    assert not np.isnan(v).any()
