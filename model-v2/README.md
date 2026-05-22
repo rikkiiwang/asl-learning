@@ -30,3 +30,23 @@ as explicit geometry.
 `../docs/superpowers/specs/2026-05-22-constellation-v2-model-design.md`
 
 Implementation plan and code land here after the plan is written.
+
+## Dev environment (isolated venv)
+
+All v2 work runs in a **dedicated virtualenv** at `model-v2/.venv` (gitignored), so
+it never perturbs the shared Python interpreter that v1 (`../model/`) trains in.
+
+```bash
+cd model-v2
+python -m venv .venv                 # one-time
+.venv/bin/python -m pip install -e . pytest   # one-time (installs torch, etc.)
+
+# thereafter, use the venv's interpreter for everything:
+.venv/bin/python -m pytest           # run tests
+.venv/bin/python -m aslv2.<module>   # run scripts
+# or `source .venv/bin/activate` once per shell.
+```
+
+Pinned in this env: torch 2.12 + MPS, torchvision 0.27, onnxruntime 1.26,
+pytest 9.x. **Do not `pip install` into the shared interpreter** — it would
+upgrade v1's torch.
