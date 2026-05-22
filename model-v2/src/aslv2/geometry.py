@@ -78,3 +78,42 @@ def slot_hands(frames: list[np.ndarray], head_cx: float, gate: float = 80.0):
             slots[f, s] = box
             present[f, s] = 1.0
     return slots, present
+
+
+GEOM_DIM = 2 * 21 * 2 + 2 * 2 + 2 + 2 + 1   # 84 + 4 + 2 + 2 + 1 = 93
+
+
+def normalize_geometry(kps: np.ndarray, present: np.ndarray,
+                       head: np.ndarray, head_present: float) -> np.ndarray:
+    """kps: (2,21,2) keypoints per slot (np.nan where absent).
+    present: (2,) slot presence. head: (4,) xyxy anchor. Returns (GEOM_DIM,).
+    Translation/scale invariant: subtract head center, divide by head size."""
+    hcx = (head[0] + head[2]) / 2.0
+    hcy = (head[1] + head[3]) / 2.0
+    hs = max(head[2] - head[0], head[3] - head[1])
+    if hs <= 0:
+        hs = 1.0
+    center = np.array([hcx, hcy])
+
+    kp_block = np.zeros((2, 21, 2))
+    hand2head = np.zeros((2, 2))
+    hand_centers = np.full((2, 2), np.nan)
+    for s in range(2):
+        if present[s] > 0 and not np.isnan(kps[s]).any():
+            norm = (kps[s] - center) / hs
+            kp_block[s] = norm
+            hc = kps[s].mean(axis=0)
+            hand_centers[s] = hc
+            hand2head[s] = (hc - center) / hs
+    if present[0] > 0 and present[1] > 0:
+        hand2hand = (hand_centers[1] - hand_centers[0]) / hs
+    else:
+        hand2hand = np.zeros(2)
+
+    return np.concatenate([
+        kp_block.reshape(-1),       # 84
+        hand2head.reshape(-1),      # 4
+        hand2hand,                  # 2
+        present.astype(float),      # 2
+        np.array([float(head_present)]),  # 1
+    ])
