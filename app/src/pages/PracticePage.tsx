@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useCamera } from '../camera/useCamera';
 import { sampleMeanLuminance } from '../camera/sampleLuminance';
 import { assessBrightness, type BrightnessStatus } from '../lib/camera';
@@ -8,7 +8,7 @@ import { framesToTensor } from '../lib/clipTensor';
 import { softmax, topK } from '../lib/inference';
 import { decidePassFail, type Decision } from '../lib/decision';
 import { buildHint } from '../lib/hints';
-import { buildDeck } from '../lib/deck';
+import { buildDeck, targetedDeck } from '../lib/deck';
 import { wordOutcome, buildAttemptRow, type WordOutcome } from '../lib/session';
 import { readPending, addPending, clearPending } from '../lib/pendingAttempts';
 import { localMidnightISO } from '../lib/time';
@@ -45,6 +45,8 @@ const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 export function PracticePage() {
   const { session: authSession, loading: authLoading } = useSession();
+  const [searchParams] = useSearchParams();
+  const targetSignId = searchParams.get('sign');
   const { selected } = useModel();
   const { videoRef, state: cam, error: camError, start } = useCamera();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -100,12 +102,14 @@ export function PracticePage() {
       ]);
       const signs = (signsRes.data ?? []) as Sign[];
       setByClassIndex(new Map(signs.map((s) => [s.model_class_index, s])));
-      setDeck(buildDeck(signs, (masteryRes.data ?? []) as SignMastery[], DECK_SIZE));
+      // Deep-link from the vocab map (?sign=…) practices just that sign; otherwise the normal deck.
+      const focused = targetSignId ? targetedDeck(signs, targetSignId) : [];
+      setDeck(focused.length ? focused : buildDeck(signs, (masteryRes.data ?? []) as SignMastery[], DECK_SIZE));
       setUserId(uid);
       setSessionId(created.data.id);
       setPhase('practicing');
     })();
-  }, [authLoading, authSession]);
+  }, [authLoading, authSession, targetSignId]);
 
   useEffect(() => {
     if (cam !== 'ready' || step === 'recording') return;

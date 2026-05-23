@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildDeck } from './deck';
+import { buildDeck, targetedDeck } from './deck';
 import type { Sign, SignMastery, MasteryStatus } from './types';
 
 function sign(id: string, idx: number): Sign {
@@ -52,5 +52,16 @@ describe('buildDeck', () => {
     const m = [mastery('s0', 'mastered', '2026-05-19')];
     const deck = buildDeck(signs.slice(0, 3), m, 10);
     expect(deck[deck.length - 1].id).toBe('s0'); // mastered last
+  });
+});
+
+describe('targetedDeck', () => {
+  it('returns the single matching sign', () => {
+    const deck = targetedDeck(signs, 's3');
+    expect(deck).toHaveLength(1);
+    expect(deck[0].id).toBe('s3');
+  });
+  it('returns an empty deck for an unknown id', () => {
+    expect(targetedDeck(signs, 'nope')).toEqual([]);
   });
 });
