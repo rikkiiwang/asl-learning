@@ -1,20 +1,26 @@
-"""Bundle the detector code + manifests into one small zip for Colab upload.
+"""Bundle code + manifests into one small zip for Colab upload.
 
-The image zip (detect_small.zip) is NOT included here — upload it to the same
-Drive folder separately (it is already compressed, so re-zipping would be
-wasteful).
+Supports two modes via --landmark flag:
+  Detector (default): packages code + detect manifests → colab_detector_code.zip
+  Landmark:           packages code + landmark manifests → colab_landmark_code.zip
+
+The image zip is NOT included here — upload it separately (already compressed).
 
 Usage (from model-v2/ directory, using the project venv):
+    # Detector (default):
     python scripts/package_for_colab.py
-    # or with an explicit output path:
     python scripts/package_for_colab.py --out artifacts/colab_detector_code.zip
+
+    # Landmark (run AFTER build_landmark_manifests.py + shrink_landmark_for_colab.py):
+    python scripts/package_for_colab.py --landmark
+    python scripts/package_for_colab.py --landmark --out artifacts/colab_landmark_code.zip
 """
 import argparse
 import os
 import zipfile
 
-# Paths are relative to the model-v2/ root (where this script is run from).
-INCLUDE = [
+# Paths relative to the model-v2/ root (where this script is run from).
+INCLUDE_DETECTOR = [
     "src/aslv2",
     "configs",
     "pyproject.toml",
@@ -22,6 +28,14 @@ INCLUDE = [
     "artifacts/detect/val.json",
     "artifacts/detect/train_small.json",
     "artifacts/detect/val_small.json",
+]
+
+INCLUDE_LANDMARK = [
+    "src/aslv2",
+    "configs",
+    "pyproject.toml",
+    "artifacts/landmark/train_small.json",
+    "artifacts/landmark/val_small.json",
 ]
 
 
@@ -46,28 +60,49 @@ def add(z: zipfile.ZipFile, path: str) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(
-        description="Package detector code + manifests for Colab."
+        description="Package code + manifests for Colab (detector or landmark)."
+    )
+    ap.add_argument(
+        "--landmark",
+        action="store_true",
+        help="Package landmark code + manifests instead of detector.",
     )
     ap.add_argument(
         "--out",
-        default="artifacts/colab_detector_code.zip",
-        help="Output zip path (default: artifacts/colab_detector_code.zip)",
+        default=None,
+        help=(
+            "Output zip path. "
+            "Defaults to artifacts/colab_detector_code.zip (or colab_landmark_code.zip "
+            "when --landmark is set)."
+        ),
     )
     args = ap.parse_args()
 
-    os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
+    if args.landmark:
+        include  = INCLUDE_LANDMARK
+        out_path = args.out or "artifacts/colab_landmark_code.zip"
+        img_zip  = "artifacts/landmark_small.zip"
+        img_note = "shrunk FreiHAND images (~500 MB estimate)"
+        drive    = "MyDrive/asl-landmark/"
+    else:
+        include  = INCLUDE_DETECTOR
+        out_path = args.out or "artifacts/colab_detector_code.zip"
+        img_zip  = "artifacts/detect_small.zip"
+        img_note = "shrunk images (~1 GB)"
+        drive    = "MyDrive/asl-detector/"
 
-    with zipfile.ZipFile(args.out, "w", zipfile.ZIP_DEFLATED) as z:
-        for p in INCLUDE:
+    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+
+    with zipfile.ZipFile(out_path, "w", zipfile.ZIP_DEFLATED) as z:
+        for p in include:
             add(z, p)
 
-    size_mb = os.path.getsize(args.out) / 1e6
-    print(f"\nWrote {args.out}  ({size_mb:.1f} MB)\n")
+    size_mb = os.path.getsize(out_path) / 1e6
+    print(f"\nWrote {out_path}  ({size_mb:.1f} MB)\n")
 
     # Print contents summary
-    with zipfile.ZipFile(args.out) as z:
+    with zipfile.ZipFile(out_path) as z:
         names = z.namelist()
-    # Group by top-level entry
     groups: dict[str, int] = {}
     for name in names:
         top = name.split("/")[0] if "/" in name else name
@@ -76,11 +111,10 @@ def main() -> None:
     for g, count in sorted(groups.items()):
         print(f"  {g}/  ({count} file{'s' if count != 1 else ''})")
 
-    print("\nUpload these 2 files to your Drive folder (e.g. MyDrive/asl-detector/):")
-    print(f"  {args.out}           <- code + manifests (this file)")
-    print("  artifacts/detect_small.zip              <- shrunk images (~1 GB)")
-    print("\nTotal upload ~1 GB (replaces the old ~10.5 GB upload).")
-    print("See model-v2/COLAB.md for details.")
+    print(f"\nUpload these 2 files to your Drive folder (e.g. {drive}):")
+    print(f"  {out_path}    <- code + manifests (this file)")
+    print(f"  {img_zip}     <- {img_note}")
+    print("\nSee model-v2/COLAB.md for details.")
 
 
 if __name__ == "__main__":
