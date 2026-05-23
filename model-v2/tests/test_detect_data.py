@@ -98,3 +98,36 @@ def test_detdataset_absolute_path_ignores_data_root(tmp_path):
 
     tensor, boxes, labels = ds[0]
     assert tensor.shape == (3, 128, 128)
+
+
+def test_detdataset_drops_degenerate_box_after_clip(tmp_path):
+    """A box that clips to zero width must be dropped; the valid box is kept."""
+    from aslv2.detect.data import DetDataset
+
+    # 128×128 image
+    img = np.full((128, 128, 3), 128, dtype=np.uint8)
+    img_path = tmp_path / "frame.png"
+    cv2.imwrite(str(img_path), img)
+
+    # Box 1: fully valid [10, 10, 60, 60] in 128² space (already matches 128² image)
+    # Box 2: entirely past the right edge — after clipping x1=128, x2=128 → width=0
+    manifest = [
+        {
+            "image": str(img_path),
+            "boxes": [[10.0, 10.0, 60.0, 60.0], [200.0, 10.0, 250.0, 60.0]],
+            "labels": [0, 1],
+        }
+    ]
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest))
+
+    norm = {"mean": [0.5, 0.5, 0.5], "std": [0.25, 0.25, 0.25]}
+    ds = DetDataset(str(manifest_path), norm=norm, train=False)
+
+    tensor, boxes, labels = ds[0]
+
+    # Only the valid box should survive — the degenerate one must be dropped
+    assert boxes.shape[0] == 1, (
+        f"Expected 1 box after dropping degenerate, got {boxes.shape[0]}"
+    )
+    assert int(labels[0]) == 0, "Surviving box should carry the first label (class 0)"

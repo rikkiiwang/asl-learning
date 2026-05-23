@@ -68,6 +68,11 @@ class DetDataset(Dataset):
         boxes[:, [0, 2]] = boxes[:, [0, 2]].clip(0, _IMG_SIZE)
         boxes[:, [1, 3]] = boxes[:, [1, 3]].clip(0, _IMG_SIZE)
 
+        # Drop degenerate boxes (width < 1 or height < 1 after clipping)
+        keep = ((boxes[:, 2] - boxes[:, 0]) >= 1) & ((boxes[:, 3] - boxes[:, 1]) >= 1)
+        boxes  = boxes[keep]
+        labels = labels[keep]
+
         # ----- convert to tensor (C, H, W) in [0,1], then normalise -----
         img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0
         tensor = torch.from_numpy(img_rgb.transpose(2, 0, 1))  # (3, H, W)

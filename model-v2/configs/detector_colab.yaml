@@ -25,6 +25,9 @@ warmup_epochs:     3
 early_stop_patience: 12
 seed:              1337
 
+# DataLoader workers (T4 Colab recommends <=2 to avoid "suggested 2" warning)
+num_workers:       2
+
 # Validation: cap at 1500 images for speed (full val = 12575 images)
 val_max_images:    1500
 

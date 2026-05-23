@@ -23,3 +23,18 @@ def test_decode_roundtrip_recovers_box():
     boxes, scs, lbl = decode(anchors, box_t, scores, score_thr=0.5, iou_thr=0.5)
     assert len(boxes) == 1 and lbl[0] == 1
     np.testing.assert_allclose(boxes[0], gt[0], atol=1.0)
+
+
+def test_encode_targets_degenerate_gt_box_produces_finite_deltas():
+    """A GT box with zero width must not produce -inf/-nan box deltas (log(0) guard)."""
+    import warnings
+    anchors = make_anchors()
+    # GT box [10, 10, 10, 30] — zero width (x1==x2), non-zero height
+    gt = np.array([[10.0, 10.0, 10.0, 40.0]], float)
+    labels = np.array([0])
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")   # any RuntimeWarning (divide-by-zero) → error
+        cls_tgt, box_t, pos, valid = encode_targets(anchors, gt, labels)
+    assert np.isfinite(box_t).all(), (
+        f"box_t contains non-finite values: {box_t[~np.isfinite(box_t)]}"
+    )

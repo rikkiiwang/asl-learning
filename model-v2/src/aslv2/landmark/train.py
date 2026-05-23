@@ -135,13 +135,14 @@ def main() -> None:
 
     print(f"train={len(train_ds)}  val={len(val_ds)}")
 
+    num_workers = cfg.get("num_workers", 4)
     dl_tr = DataLoader(
         train_ds, batch_size=cfg["batch_size"], shuffle=True,
-        num_workers=4, drop_last=True,
+        num_workers=num_workers, drop_last=True,
     )
     dl_va = DataLoader(
         val_ds, batch_size=cfg["batch_size"], shuffle=False,
-        num_workers=4,
+        num_workers=num_workers,
     )
 
     model = Landmark(width=cfg["width"]).to(dev)

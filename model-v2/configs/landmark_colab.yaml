@@ -24,5 +24,8 @@ warmup_epochs:       3
 early_stop_patience: 15
 seed:                1337
 
+# DataLoader workers (T4 Colab recommends <=2 to avoid "suggested 2" warning)
+num_workers: 2
+
 # Output
 out_dir: artifacts/checkpoints/landmark

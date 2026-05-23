@@ -35,7 +35,7 @@ def encode_targets(anchors, gt, labels, iou_pos=0.5, iou_neg=0.4):
         j = best_gt[i]
         cls_tgt[i, labels[j]] = 1.0        # one-hot at GT class
         box_t[i] = [(g[j,0]-a[i,0])/a[i,2], (g[j,1]-a[i,1])/a[i,3],
-                    np.log(g[j,2]/a[i,2]), np.log(g[j,3]/a[i,3])]
+                    np.log(max(g[j,2], 1.0)/a[i,2]), np.log(max(g[j,3], 1.0)/a[i,3])]
     # valid = positives OR clear background (max_iou < iou_neg)
     # the in-between band [iou_neg, iou_pos) that is not positive is excluded
     valid = pos | (best_iou < iou_neg)

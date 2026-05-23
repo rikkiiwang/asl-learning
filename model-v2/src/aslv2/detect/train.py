@@ -209,13 +209,14 @@ def main() -> None:
     print(f"train={len(train_ds)}  val={len(val_ds)}")
 
     # DataLoaders with custom collate (variable-length boxes)
+    num_workers = cfg.get("num_workers", 4)
     dl_tr = DataLoader(
         train_ds, batch_size=cfg["batch_size"], shuffle=True,
-        num_workers=4, drop_last=True, collate_fn=_collate,
+        num_workers=num_workers, drop_last=True, collate_fn=_collate,
     )
     dl_va = DataLoader(
         val_ds, batch_size=cfg["batch_size"], shuffle=False,
-        num_workers=4, collate_fn=_collate,
+        num_workers=num_workers, collate_fn=_collate,
     )
 
     # Model + optimizer
