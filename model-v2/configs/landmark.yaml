@@ -1,0 +1,30 @@
+# Landmark (Stage-1.5) training configuration
+# Image paths in manifests are relative to data_root.
+# Run after FreiHAND is downloaded and manifests are built:
+#   python scripts/build_landmark_manifests.py
+#   python -m aslv2.landmark.train --config configs/landmark.yaml
+
+data_root:        data/landmark
+train_manifest:   artifacts/landmark/train.json
+val_manifest:     artifacts/landmark/val.json
+
+# Normalisation (ImageNet RGB — consistent with detector pipeline)
+norm:
+  mean: [0.485, 0.456, 0.406]
+  std:  [0.229, 0.224, 0.225]
+
+# Model — must match KpDataset crop size
+img:    64
+width:  32
+
+# Optimisation
+lr:                  3.0e-3
+weight_decay:        0.02
+epochs:              80
+batch_size:          128
+warmup_epochs:       3
+early_stop_patience: 15
+seed:                1337
+
+# Output
+out_dir: artifacts/checkpoints/landmark
