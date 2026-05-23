@@ -3,14 +3,14 @@
     "images": 90204,
     "hand_boxes": 151892,
     "head_boxes": 27307,
-    "size_mb": 27.17,
+    "size_mb": 22.21,
     "path_resolution_pct": 100.0
   },
   "val": {
     "images": 12575,
     "hand_boxes": 19002,
     "head_boxes": 7093,
-    "size_mb": 3.71,
+    "size_mb": 3.02,
     "path_resolution_pct": 100.0
   }
 }

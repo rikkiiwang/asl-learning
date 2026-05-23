@@ -4,6 +4,9 @@ Outputs:
   model-v2/artifacts/detect/train.json  (100DOH train + WIDER train)
   model-v2/artifacts/detect/val.json    (100DOH val   + WIDER val)
 
+Image paths in the manifests are stored *relative to model-v2/data/detect/* so that
+the manifests are portable to Colab (set data_root to the corresponding GDrive path).
+
 Prints per-split statistics and a path-resolution sanity check.
 """
 from __future__ import annotations
@@ -37,6 +40,10 @@ _WIDER_SPLIT = os.path.join(_WIDER_DIR, "wider_face_split")
 
 _OUT_DIR = os.path.join(_MODEL_V2, "artifacts", "detect")
 
+# data_root: image paths in the manifest are stored relative to this directory.
+# On Colab, set data_root to the GDrive path where data/detect/ is mounted.
+_DATA_ROOT = os.path.join(_MODEL_V2, "data", "detect")
+
 SPLITS = {
     "train": {
         "doh_json":    os.path.join(_100DOH_FILE, "train.json"),
@@ -63,12 +70,18 @@ def count_boxes(records: list[dict], label: int) -> int:
     return sum(lbl == label for rec in records for lbl in rec["labels"])
 
 
-def sanity_check_paths(records: list[dict], sample_n: int = 200) -> float:
+def sanity_check_paths(records: list[dict], sample_n: int = 200,
+                       data_root: str = "") -> float:
     """Return fraction of sampled image paths that exist on disk."""
     if not records:
         return 0.0
     sample = random.sample(records, min(sample_n, len(records)))
-    found = sum(1 for r in sample if os.path.isfile(r["image"]))
+    found = sum(
+        1 for r in sample
+        if os.path.isfile(
+            os.path.join(data_root, r["image"]) if data_root else r["image"]
+        )
+    )
     return found / len(sample)
 
 
@@ -90,12 +103,14 @@ def main() -> None:
         print(f"{'='*60}")
 
         print(f"  [100DOH]  {cfg['doh_json']}")
-        doh_records = adapt_100doh(cfg["doh_json"], cfg["doh_raw"])
+        doh_records = adapt_100doh(cfg["doh_json"], cfg["doh_raw"],
+                                   data_root=_DATA_ROOT)
         print(f"            → {len(doh_records)} images, "
               f"{count_boxes(doh_records, 0)} hand boxes")
 
         print(f"  [WIDER]   {cfg['wider_gt']}")
-        wider_records = adapt_widerface(cfg["wider_gt"], cfg["wider_imgs"])
+        wider_records = adapt_widerface(cfg["wider_gt"], cfg["wider_imgs"],
+                                        data_root=_DATA_ROOT)
         print(f"            → {len(wider_records)} images, "
               f"{count_boxes(wider_records, 1)} head boxes")
 
@@ -109,7 +124,7 @@ def main() -> None:
         print(f"\n  Written → {cfg['out']}  ({mb:.1f} MB)")
         print(f"  TOTAL:  {n_images} images | {n_hands} hand boxes | {n_heads} head boxes")
 
-        resolution = sanity_check_paths(all_records, sample_n=300)
+        resolution = sanity_check_paths(all_records, sample_n=300, data_root=_DATA_ROOT)
         print(f"  Path resolution: {resolution*100:.1f}% of sampled images exist on disk")
         if resolution < 0.99:
             print(f"  WARNING: <99% paths resolved — check raw_dir / images_dir settings")

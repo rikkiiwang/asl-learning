@@ -1,7 +1,10 @@
 """Dataset adapters: convert 100DOH + WIDER FACE into unified detector manifests.
 
 Unified manifest format:
-  [{"image": "<abs-path>", "boxes": [[x1,y1,x2,y2], ...], "labels": [0|1, ...]}]
+  [{"image": "<path>", "boxes": [[x1,y1,x2,y2], ...], "labels": [0|1, ...]}]
+
+Image paths are relative to a configurable data_root (default: model-v2/data/detect/).
+Absolute paths are preserved as-is for backward compatibility.
 
 Labels:  0 = hand (100DOH),  1 = head (WIDER FACE)
 Boxes:   xyxy pixel coordinates
@@ -17,12 +20,15 @@ from typing import List, Dict, Any
 # 100DOH
 # ---------------------------------------------------------------------------
 
-def adapt_100doh(json_path: str, raw_dir: str) -> List[Dict[str, Any]]:
+def adapt_100doh(json_path: str, raw_dir: str,
+                 data_root: str = "") -> List[Dict[str, Any]]:
     """Convert 100DOH annotation JSON to unified manifest records.
 
     Args:
-        json_path: path to 100DOH file/{train,val}.json
-        raw_dir:   root directory where image files live (key resolves to raw_dir/key)
+        json_path:  path to 100DOH file/{train,val}.json
+        raw_dir:    root directory where image files live (key resolves to raw_dir/key)
+        data_root:  if non-empty, image paths are stored relative to this directory
+                    instead of as absolute paths (enables Colab portability).
 
     Returns:
         List of manifest dicts; images with no valid boxes are excluded.
@@ -54,9 +60,15 @@ def adapt_100doh(json_path: str, raw_dir: str) -> List[Dict[str, Any]]:
         if not boxes:
             continue
 
+        abs_path = os.path.join(raw_dir, key)
+        if data_root:
+            image_entry = os.path.relpath(abs_path, data_root)
+        else:
+            image_entry = abs_path
+
         records.append(
             {
-                "image": os.path.join(raw_dir, key),
+                "image": image_entry,
                 "boxes": boxes,
                 "labels": labels,
             }
@@ -73,7 +85,8 @@ def adapt_100doh(json_path: str, raw_dir: str) -> List[Dict[str, Any]]:
 _MIN_FACE_SIDE = 40
 
 
-def adapt_widerface(gt_txt: str, images_dir: str) -> List[Dict[str, Any]]:
+def adapt_widerface(gt_txt: str, images_dir: str,
+                    data_root: str = "") -> List[Dict[str, Any]]:
     """Convert WIDER FACE ground-truth text file to unified manifest records.
 
     Format (per image block):
@@ -93,6 +106,8 @@ def adapt_widerface(gt_txt: str, images_dir: str) -> List[Dict[str, Any]]:
     Args:
         gt_txt:     path to wider_face_{train,val}_bbx_gt.txt
         images_dir: root directory for images (filename resolves to images_dir/filename)
+        data_root:  if non-empty, image paths are stored relative to this directory
+                    instead of as absolute paths (enables Colab portability).
 
     Returns:
         List of manifest dicts.
@@ -152,9 +167,15 @@ def adapt_widerface(gt_txt: str, images_dir: str) -> List[Dict[str, Any]]:
         if not boxes:
             continue
 
+        abs_path = os.path.join(images_dir, filename)
+        if data_root:
+            image_entry = os.path.relpath(abs_path, data_root)
+        else:
+            image_entry = abs_path
+
         records.append(
             {
-                "image": os.path.join(images_dir, filename),
+                "image": image_entry,
                 "boxes": boxes,
                 "labels": labels,
             }

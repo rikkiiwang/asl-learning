@@ -9,6 +9,7 @@ small scale/translate that also updates boxes).  No horizontal flip — the
 hand/head spatial arrangement has left/right meaning for ASL.
 """
 import json
+import os
 import random
 import numpy as np
 import cv2
@@ -19,27 +20,33 @@ _IMG_SIZE = 128
 
 
 class DetDataset(Dataset):
-    def __init__(self, manifest_path: str, norm: dict, train: bool = True):
+    def __init__(self, manifest_path: str, norm: dict, train: bool = True,
+                 data_root: str = ""):
         """
         Args:
             manifest_path: path to unified JSON manifest.
             norm: dict with keys "mean" and "std", each a list of 3 floats.
             train: if True, apply augmentations.
+            data_root: optional root directory prepended to relative image paths.
+                If an image path is absolute, os.path.join returns it unchanged,
+                so absolute entries remain backward-compatible.
         """
         with open(manifest_path) as f:
             self._entries = json.load(f)
         self._mean = np.array(norm["mean"], dtype=np.float32).reshape(3, 1, 1)
         self._std  = np.array(norm["std"],  dtype=np.float32).reshape(3, 1, 1)
         self._train = train
+        self._data_root = data_root
 
     def __len__(self):
         return len(self._entries)
 
     def __getitem__(self, idx):
         entry = self._entries[idx]
-        img_bgr = cv2.imread(entry["image"])
+        img_path = os.path.join(self._data_root, entry["image"]) if self._data_root else entry["image"]
+        img_bgr = cv2.imread(img_path)
         if img_bgr is None:
-            raise FileNotFoundError(f"Cannot read image: {entry['image']}")
+            raise FileNotFoundError(f"Cannot read image: {img_path}")
 
         h_orig, w_orig = img_bgr.shape[:2]
         boxes  = np.array(entry["boxes"],  dtype=np.float32).reshape(-1, 4)
