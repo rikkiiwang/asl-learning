@@ -11,6 +11,10 @@ import { buildHint } from '../lib/hints';
 import { buildDeck } from '../lib/deck';
 import { wordOutcome, buildAttemptRow, type WordOutcome } from '../lib/session';
 import { readPending, addPending, clearPending } from '../lib/pendingAttempts';
+import { localMidnightISO } from '../lib/time';
+import { computeStreak } from '../lib/streak';
+import { goalProgress } from '../lib/dailyGoal';
+import { SessionComplete } from '../components/SessionComplete';
 import { createRecognizer } from '../inference/recognizer';
 import { useModel } from '../models/ModelProvider';
 import { useSession } from '../auth/SessionProvider';
@@ -58,6 +62,7 @@ export function PracticePage() {
   const [brightness, setBrightness] = useState<BrightnessStatus | null>(null);
   const [result, setResult] = useState<AttemptResult | null>(null);
   const [stats, setStats] = useState({ completed: 0, passed: 0 });
+  const [finishInfo, setFinishInfo] = useState({ streak: 0, goalClosed: false });
 
   const current = deck[deckIndex] ?? null;
 
@@ -171,7 +176,16 @@ export function PracticePage() {
   }
 
   async function finish() {
-    if (sessionId) await supabase.from('sessions').update({ ended_at: new Date().toISOString() }).eq('id', sessionId);
+    if (sessionId && userId) {
+      await supabase.from('sessions').update({ ended_at: new Date().toISOString() }).eq('id', sessionId);
+      const [sessionsRes, todayRes] = await Promise.all([
+        supabase.from('sessions').select('started_at'),
+        supabase.from('attempts').select('sign_id').gte('created_at', localMidnightISO()),
+      ]);
+      const streak = computeStreak(((sessionsRes.data ?? []) as { started_at: string }[]).map((s) => s.started_at));
+      const practiced = new Set(((todayRes.data ?? []) as { sign_id: string }[]).map((a) => a.sign_id)).size;
+      setFinishInfo({ streak, goalClosed: goalProgress(practiced).complete });
+    }
     setPhase('finished');
   }
 
@@ -185,19 +199,12 @@ export function PracticePage() {
     );
   if (phase === 'finished')
     return (
-      <main className="page" style={{ textAlign: 'center' }}>
-        <h1 className="page-title" style={{ fontSize: 28 }}>
-          Session complete 🎉
-        </h1>
-        <p className="spacer-top" style={{ fontSize: 18 }}>
-          Passed <strong>{stats.passed}</strong> of <strong>{stats.completed}</strong> words.
-        </p>
-        <div className="spacer-top">
-          <Link to="/" className="btn btn-primary">
-            ← Back to dashboard
-          </Link>
-        </div>
-      </main>
+      <SessionComplete
+        passed={stats.passed}
+        completed={stats.completed}
+        streak={finishInfo.streak}
+        goalClosed={finishInfo.goalClosed}
+      />
     );
 
   const busy = step === 'counting' || step === 'recording' || step === 'predicting';

@@ -2,9 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../db/supabase';
 import { summarizeProgress, progressBarSegments } from '../lib/progress';
-import { timeAgo } from '../lib/time';
+import { timeAgo, localMidnightISO } from '../lib/time';
+import { computeStreak } from '../lib/streak';
+import { attemptXp } from '../lib/xp';
 import type { ProgressSummary, Sign, SignMastery } from '../lib/types';
 import { ModelSwitcher } from '../components/ModelSwitcher';
+import { StreakPill } from '../components/StreakPill';
+import { DailyGoalCard } from '../components/DailyGoalCard';
 
 interface RecentItem {
   label: string;
@@ -17,15 +21,19 @@ export function DashboardPage() {
   const [recent, setRecent] = useState<RecentItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [streak, setStreak] = useState(0);
+  const [practicedToday, setPracticedToday] = useState(0);
 
   useEffect(() => {
     (async () => {
-      const [signsRes, masteryRes, attemptsRes] = await Promise.all([
+      const [signsRes, masteryRes, attemptsRes, sessionsRes, todayRes] = await Promise.all([
         supabase.from('signs').select('id,model_class_index,label,gloss,category').order('model_class_index'),
         supabase
           .from('sign_mastery')
           .select('sign_id,mastery_status,total_attempts,total_passes,first_try_pass_session_count,last_practiced_at,last_result'),
         supabase.from('attempts').select('sign_id,result,created_at').order('created_at', { ascending: false }).limit(8),
+        supabase.from('sessions').select('started_at'),
+        supabase.from('attempts').select('sign_id').gte('created_at', localMidnightISO()),
       ]);
       if (signsRes.error || masteryRes.error) {
         setError((signsRes.error ?? masteryRes.error)!.message);
@@ -42,6 +50,9 @@ export function DashboardPage() {
           at: a.created_at,
         })),
       );
+      setStreak(computeStreak(((sessionsRes.data ?? []) as { started_at: string }[]).map((s) => s.started_at)));
+      const todayIds = new Set(((todayRes.data ?? []) as { sign_id: string }[]).map((a) => a.sign_id));
+      setPracticedToday(todayIds.size);
       setLoading(false);
     })();
   }, []);
@@ -51,6 +62,7 @@ export function DashboardPage() {
       <div>
         <div className="page-header">
           <h1 className="page-title">ASL Practice</h1>
+          <StreakPill days={streak} />
         </div>
         <p className="subtitle">Level up your signs!</p>
       </div>
@@ -60,6 +72,7 @@ export function DashboardPage() {
 
       {summary && (
         <>
+          <DailyGoalCard practicedToday={practicedToday} />
           <ProgressCard summary={summary} />
 
           <Link to="/practice" className="btn btn-primary btn-block">
@@ -119,6 +132,9 @@ function RecentHistory({ items }: { items: RecentItem[] }) {
             <span style={{ fontWeight: 700 }}>{it.label}</span>
             <span className="muted">{it.result === 'pass' ? '✓ passed' : '✗ missed'}</span>
             <span className="when">{timeAgo(it.at)}</span>
+            <span style={{ fontWeight: 700, color: it.result === 'pass' ? 'var(--accent)' : 'var(--text-faint)' }}>
+              {attemptXp(it.result) > 0 ? `+${attemptXp(it.result)} XP` : '+0'}
+            </span>
           </div>
         ))}
       </div>
