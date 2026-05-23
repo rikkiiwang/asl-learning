@@ -32,8 +32,9 @@ Open `model-v2/notebooks/train_detector_colab.ipynb` in Colab →
 **Runtime → Change runtime type → GPU** (A100/L4/T4) → Run all.
 
 It mounts Drive, copies the 2 zips to local Colab disk, extracts
-`detect_small.zip` into `/content/data/detect_small` (which already contains
-`100doh/raw/...` and `widerface/WIDER_train|val/...`), `pip install -e`s the code,
+`detect_small.zip` into `/content` (the zip stores `data/detect_small/...`, so
+files land at `/content/data/detect_small/100doh/...` and `.../widerface/...`),
+`pip install -e`s the code,
 runs training with `configs/detector_colab.yaml` and
 `--data-root /content/data/detect_small`, and copies `best.pt` + `history.json`
 back to the Drive folder.
@@ -105,7 +106,7 @@ Open `model-v2/notebooks/train_landmark_colab.ipynb` in Colab →
 **Runtime → Change runtime type → GPU (A100/L4/T4)** → Run all.
 
 It mounts Drive, copies the 2 zips to local Colab disk, extracts
-`landmark_small.zip` into `/content/data/landmark_small`,
+`landmark_small.zip` into `/content` (lands at `/content/data/landmark_small/...`),
 `pip install -e`s the code, runs training with
 `configs/landmark_colab.yaml --data-root /content/data/landmark_small`,
 and copies `best.pt` + `history.json` back to the Drive folder.
