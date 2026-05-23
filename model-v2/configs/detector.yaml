@@ -1,0 +1,32 @@
+# Detector training configuration
+# Image paths in the manifests are relative to data_root.
+# On Colab: override data_root with --data-root /path/to/gdrive/data/detect
+
+data_root:        data/detect
+train_manifest:   artifacts/detect/train.json
+val_manifest:     artifacts/detect/val.json
+
+# Normalisation (ImageNet RGB mean/std — standard for mixed detection datasets)
+norm:
+  mean: [0.485, 0.456, 0.406]
+  std:  [0.229, 0.224, 0.225]
+
+# Model
+img:       128
+n_anchors: 3
+width:     192
+
+# Optimisation
+lr:                3.0e-3
+weight_decay:      0.02
+epochs:            60
+batch_size:        64
+warmup_epochs:     3
+early_stop_patience: 12
+seed:              1337
+
+# Validation: cap at 1500 images for speed (full val = 12575 images)
+val_max_images:    1500
+
+# Output
+out_dir:           artifacts/checkpoints/detector
