@@ -1,4 +1,4 @@
-"""Tiny depthwise-separable SSD-style detector.
+"""Depthwise-separable SSD-style detector.
 
 Architecture (128×128 input → 8×8 feature map → 192 anchors):
   stem:  3→w, stride 2        → 64×64
@@ -6,10 +6,11 @@ Architecture (128×128 input → 8×8 feature map → 192 anchors):
   block2: w→2w                → 32×32
   block3: 2w→2w, stride 2     → 16×16
   block4: 2w→2w, stride 2     →  8×8   (stride-16 from input)
+  block5: 2w→2w               →  8×8   (extra refinement block)
   cls head: 1×1 conv → (A*n_classes) → reshape (B, 8*8*A, n_classes)
   box head: 1×1 conv → (A*4)         → reshape (B, 8*8*A, 4)
 
-With default width=32 this yields ~16k params, well under the 2M cap (spec §3.7).
+With default width=192 this yields ~583k params, well under the 2M cap (spec §3.7).
 """
 import torch
 import torch.nn as nn
@@ -29,14 +30,14 @@ class SepConv(nn.Module):
 
 
 class Detector(nn.Module):
-    """Tiny from-scratch single-shot detector for hand (0) and head (1) boxes.
+    """Single-shot detector for hand (0) and head (1) boxes.
 
     Args:
         n_classes: number of foreground classes (default 2: hand + head).
         n_anchors: anchors per cell (default 3: scales 32/64/96 px).
-        width:     base channel width (default 32).
+        width:     base channel width (default 192, ~583k params).
     """
-    def __init__(self, n_classes: int = 2, n_anchors: int = 3, width: int = 32):
+    def __init__(self, n_classes: int = 2, n_anchors: int = 3, width: int = 192):
         super().__init__()
         w  = width
         self.n_anchors  = n_anchors
@@ -53,6 +54,7 @@ class Detector(nn.Module):
             SepConv(w,    2*w),              # → 32×32  (width expansion)
             SepConv(2*w,  2*w,  stride=2),   # → 16×16
             SepConv(2*w,  2*w,  stride=2),   # →  8×8
+            SepConv(2*w,  2*w),              # →  8×8   (extra refinement)
         )
 
         # Detection heads (1×1 convolutions)
