@@ -1,8 +1,8 @@
 """Bundle the detector code + manifests into one small zip for Colab upload.
 
-The large image zips (raw.zip, WIDER_train.zip, WIDER_val.zip) are NOT included
-here — upload them to the same Drive folder separately (they are already
-compressed, so re-zipping would be wasteful).
+The image zip (detect_small.zip) is NOT included here — upload it to the same
+Drive folder separately (it is already compressed, so re-zipping would be
+wasteful).
 
 Usage (from model-v2/ directory, using the project venv):
     python scripts/package_for_colab.py
@@ -20,6 +20,8 @@ INCLUDE = [
     "pyproject.toml",
     "artifacts/detect/train.json",
     "artifacts/detect/val.json",
+    "artifacts/detect/train_small.json",
+    "artifacts/detect/val_small.json",
 ]
 
 
@@ -74,12 +76,11 @@ def main() -> None:
     for g, count in sorted(groups.items()):
         print(f"  {g}/  ({count} file{'s' if count != 1 else ''})")
 
-    print("\nUpload these 4 files to your Drive folder (e.g. MyDrive/asl-detector/):")
-    print(f"  {args.out}                  <- code + manifests (this file)")
-    print("  data/detect/100doh/raw.zip              <- 100DOH images (~5 GB)")
-    print("  data/detect/widerface/WIDER_train.zip   <- WiderFace train images (~1.4 GB)")
-    print("  data/detect/widerface/WIDER_val.zip     <- WiderFace val images (~0.4 GB)")
-    print("\nTotal upload ~7+ GB (one-time). See model-v2/COLAB.md for details.")
+    print("\nUpload these 2 files to your Drive folder (e.g. MyDrive/asl-detector/):")
+    print(f"  {args.out}           <- code + manifests (this file)")
+    print("  artifacts/detect_small.zip              <- shrunk images (~1 GB)")
+    print("\nTotal upload ~1 GB (replaces the old ~10.5 GB upload).")
+    print("See model-v2/COLAB.md for details.")
 
 
 if __name__ == "__main__":
