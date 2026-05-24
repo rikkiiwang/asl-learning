@@ -65,10 +65,22 @@ def main():
     ap = argparse.ArgumentParser(description="Train the Constellation recognizer.")
     ap.add_argument("--config", required=True)
     ap.add_argument("--epochs", type=int, default=None)
+    # quick-sweep overrides (model selection on the val split)
+    ap.add_argument("--head", default=None)
+    ap.add_argument("--emb", type=int, default=None)
+    ap.add_argument("--use-velocity", action="store_true")
+    ap.add_argument("--kp-jitter", type=float, default=None)
+    ap.add_argument("--dropout", type=float, default=None)
+    ap.add_argument("--out-dir", default=None)
     args = ap.parse_args()
     cfg = yaml.safe_load(open(args.config))
-    if args.epochs is not None:
-        cfg["epochs"] = args.epochs
+    for key, val in [("epochs", args.epochs), ("head", args.head), ("emb", args.emb),
+                     ("kp_jitter", args.kp_jitter), ("dropout", args.dropout),
+                     ("out_dir", args.out_dir)]:
+        if val is not None:
+            cfg[key] = val
+    if args.use_velocity:
+        cfg["use_velocity"] = True
     if cfg.get("variant", "a") != "a":
         raise SystemExit("only variant 'a' is implemented; B arrives in Task 6")
 
@@ -87,7 +99,8 @@ def main():
     dl_te = DataLoader(te, batch_size=cfg["batch_size"], num_workers=nw)
 
     model = RecognizerA(n_classes=cfg["n_classes"], emb=cfg["emb"], head=cfg["head"],
-                        dropout=cfg["dropout"]).to(dev)
+                        dropout=cfg["dropout"],
+                        use_velocity=cfg.get("use_velocity", False)).to(dev)
     opt = torch.optim.AdamW(model.parameters(), lr=cfg["lr"], weight_decay=cfg["weight_decay"])
     lossf = nn.CrossEntropyLoss(label_smoothing=cfg.get("label_smoothing", 0.1))
 

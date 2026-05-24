@@ -23,3 +23,10 @@ def test_recognizer_a_transformer_head():
 def test_recognizer_a_variable_clip_length():
     m = RecognizerA(n_classes=75).eval()
     assert m(torch.randn(2, 8, GEOM_DIM)).shape == (2, 75)   # robust to F != 16
+
+
+def test_recognizer_a_velocity_option():
+    m = RecognizerA(n_classes=75, use_velocity=True).eval()
+    logits = m(torch.randn(2, 16, GEOM_DIM))                 # deltas computed in-model
+    assert logits.shape == (2, 75)
+    assert_within_budget("recognizer", m)

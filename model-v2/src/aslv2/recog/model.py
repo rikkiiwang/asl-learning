@@ -45,13 +45,20 @@ class _TemporalHead(nn.Module):
 
 
 class RecognizerA(nn.Module):
-    """Geometry-only recognizer."""
+    """Geometry-only recognizer.
+
+    `use_velocity`: also feed the per-frame temporal delta (Δgeometry) — signs are
+    defined by motion, so velocity is a strong, free signal. Doubles the per-frame
+    input width (position ‖ velocity).
+    """
     def __init__(self, n_classes: int = 75, emb: int = 192, head: str = "attn",
                  dropout: float = 0.3, tf_layers: int = 1, tf_heads: int = 4,
-                 geom_dim: int = GEOM_DIM):
+                 geom_dim: int = GEOM_DIM, use_velocity: bool = False):
         super().__init__()
+        self.use_velocity = use_velocity
+        in_dim = geom_dim * (2 if use_velocity else 1)
         self.frame = nn.Sequential(
-            nn.Linear(geom_dim, emb), nn.LayerNorm(emb), nn.ReLU(inplace=True),
+            nn.Linear(in_dim, emb), nn.LayerNorm(emb), nn.ReLU(inplace=True),
             nn.Dropout(dropout),
             nn.Linear(emb, emb), nn.ReLU(inplace=True),
         )
@@ -62,5 +69,11 @@ class RecognizerA(nn.Module):
     def forward(self, geom: torch.Tensor) -> torch.Tensor:
         """geom: (B, F, geom_dim) → logits (B, n_classes)."""
         b, f = geom.shape[:2]
-        e = self.frame(geom.reshape(b * f, -1)).reshape(b, f, -1)
+        if self.use_velocity:
+            vel = torch.zeros_like(geom)
+            vel[:, 1:] = geom[:, 1:] - geom[:, :-1]
+            x = torch.cat([geom, vel], dim=-1)
+        else:
+            x = geom
+        e = self.frame(x.reshape(b * f, -1)).reshape(b, f, -1)
         return self.fc(self.drop(self.temporal(e)))
