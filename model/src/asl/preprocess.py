@@ -70,6 +70,22 @@ def motion_roi_box(frames, margin=0.20):
     return y0, x0, int(round(side))
 
 
+def compute_flow(frames_rgb):
+    """frames_rgb: (k,H,W,3) uint8 RGB. Returns (k,H,W,2) float32 Farneback flow
+    (dx,dy). flow[0] is zeros; flow[t] is motion from frame t-1 -> t.
+
+    Classical algorithm, no learned weights (from-scratch-compliant)."""
+    k, H, W, _ = frames_rgb.shape
+    flow = np.zeros((k, H, W, 2), dtype=np.float32)
+    prev = cv2.cvtColor(frames_rgb[0], cv2.COLOR_RGB2GRAY)
+    for t in range(1, k):
+        cur = cv2.cvtColor(frames_rgb[t], cv2.COLOR_RGB2GRAY)
+        flow[t] = cv2.calcOpticalFlowFarneback(
+            prev, cur, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+        prev = cur
+    return flow
+
+
 def load_clip(path, k, size, roi=False):
     cap = cv2.VideoCapture(path)
     frames = []
