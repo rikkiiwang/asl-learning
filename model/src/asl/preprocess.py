@@ -33,7 +33,44 @@ def sample_indices(n_frames, k):
     return list(range(n_frames)) + [n_frames - 1] * (k - n_frames)
 
 
-def load_clip(path, k, size):
+def motion_roi_box(frames, margin=0.20):
+    """Classical (no learned model) motion-based ROI.
+
+    Sign motion lives in the hands/arms; the background is static. We accumulate
+    per-pixel temporal variation, threshold it, take a robust bounding box of the
+    moving region, pad it, and square it. This zooms the signing space in (more
+    pixels on the hands) and strips per-signer background — a likely overfit cue.
+
+    Returns (y0, x0, side) square box, or None to fall back to center crop.
+    """
+    if len(frames) < 3:
+        return None
+    h, w = frames[0].shape[:2]
+    grays = [cv2.cvtColor(f, cv2.COLOR_BGR2GRAY).astype(np.float32) for f in frames]
+    g = np.stack(grays, 0)                          # (T,h,w)
+    motion = np.abs(np.diff(g, axis=0)).mean(0)     # mean inter-frame change
+    motion = cv2.GaussianBlur(motion, (0, 0), sigmaX=max(h, w) / 80.0)
+    mx = float(motion.max())
+    if mx < 2.0:                                    # almost no motion -> bail
+        return None
+    mask = motion > 0.25 * mx
+    ys, xs = np.where(mask)
+    if len(xs) < 25:
+        return None
+    # robust extent (trim outliers), then pad. Tight percentiles + a safety
+    # floor avoid over-cropping low-motion signs (e.g. PURPLE/YELLOW).
+    x1, x2 = np.percentile(xs, [5, 95])
+    y1, y2 = np.percentile(ys, [5, 95])
+    bw, bh = x2 - x1, y2 - y1
+    cx, cy = (x1 + x2) / 2.0, (y1 + y2) / 2.0
+    side = max(bw, bh) * (1.0 + margin)
+    side = float(np.clip(side, 0.55 * min(h, w), min(h, w)))
+    x0 = int(round(np.clip(cx - side / 2, 0, w - side)))
+    y0 = int(round(np.clip(cy - side / 2, 0, h - side)))
+    return y0, x0, int(round(side))
+
+
+def load_clip(path, k, size, roi=False):
     cap = cv2.VideoCapture(path)
     frames = []
     while True:
@@ -44,13 +81,17 @@ def load_clip(path, k, size):
     cap.release()
     if not frames:
         return None
+    box = motion_roi_box(frames) if roi else None
     idx = sample_indices(len(frames), k)
     out = np.empty((k, size, size, 3), dtype=np.uint8)
     for i, fi in enumerate(idx):
         f = frames[fi]
         h, w = f.shape[:2]
-        s = min(h, w)                       # center square crop
-        y0, x0 = (h - s) // 2, (w - s) // 2
+        if box is not None:
+            y0, x0, s = box
+        else:
+            s = min(h, w)                   # center square crop
+            y0, x0 = (h - s) // 2, (w - s) // 2
         f = f[y0:y0 + s, x0:x0 + s]
         f = cv2.resize(f, (size, size), interpolation=cv2.INTER_AREA)
         out[i] = cv2.cvtColor(f, cv2.COLOR_BGR2RGB)
@@ -62,8 +103,11 @@ def main():
     ap.add_argument("--manifest", default="artifacts/manifest/manifest.json")
     ap.add_argument("--videos", default="data/ASL_Citizen/videos")
     ap.add_argument("--out", default="artifacts/cache/clips.npz")
+    ap.add_argument("--norm-out", default="artifacts/manifest/norm.json")
     ap.add_argument("--frames", type=int, default=16)
     ap.add_argument("--size", type=int, default=112)
+    ap.add_argument("--roi", action="store_true",
+                    help="motion-based ROI crop instead of center crop")
     args = ap.parse_args()
 
     manifest = json.load(open(args.manifest))
@@ -78,7 +122,8 @@ def main():
 
     ok = 0
     for i, (fname, lab, sp, pid) in enumerate(clips):
-        clip = load_clip(os.path.join(args.videos, fname), args.frames, args.size)
+        clip = load_clip(os.path.join(args.videos, fname), args.frames, args.size,
+                         roi=args.roi)
         if clip is None:
             print(f"[SKIP] could not decode {fname}")
             continue
@@ -97,7 +142,8 @@ def main():
     mean = tr.mean(0).tolist()
     std = tr.std(0).tolist()
     norm = {"mean": mean, "std": std}
-    json.dump(norm, open("artifacts/manifest/norm.json", "w"), indent=2)
+    os.makedirs(os.path.dirname(args.norm_out), exist_ok=True)
+    json.dump(norm, open(args.norm_out, "w"), indent=2)
 
     sz = os.path.getsize(args.out) / 1e9
     print(f"\nCached {ok} clips -> {args.out} ({sz:.2f} GB)")

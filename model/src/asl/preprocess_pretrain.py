@@ -29,6 +29,8 @@ def main():
     ap.add_argument("--frames", type=int, default=16)
     ap.add_argument("--size", type=int, default=112)
     ap.add_argument("--prefix", default="ASL_Citizen/videos/")
+    ap.add_argument("--roi", action="store_true",
+                    help="motion-based ROI crop (match the 75-set ROI cache)")
     args = ap.parse_args()
 
     clips = json.load(open(args.manifest))["clips"]
@@ -56,7 +58,7 @@ def main():
                 extracted += 1
             else:
                 continue
-        clip = load_clip(dest, args.frames, args.size)
+        clip = load_clip(dest, args.frames, args.size, roi=args.roi)
         if clip is None:
             continue
         X[ok] = clip

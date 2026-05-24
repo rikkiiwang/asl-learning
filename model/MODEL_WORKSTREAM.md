@@ -35,6 +35,7 @@ flagged items still need confirmation.
 | **Model artifact** | `models/asl-<version>.onnx`, quantized, 2-6 MB (<10 MB cap) + sidecar `meta.json` | proposed |
 | **Clip input** | **16 frames** spanning a **~3.0 s window** (≈5.3 fps), uniform temporal **resampling** to exactly 16 frames, **112×112 RGB**, per-channel normalized (mean/std in `meta.json`) | **FROZEN 2026-05-21** |
 | **Capture window** | App's countdown-record produces the SAME clip shape: fixed ~3 s window → resample to **16 frames** @112×112 → identical normalization. **CHANGE: app proposed 12 → frozen at 16** (affects app A5). | **FROZEN 2026-05-21** |
+| **Motion-ROI crop** | The shipped model is trained on a **classical motion-ROI crop** (per-pixel inter-frame abs-diff → robust bounding box `[5,95]` pct → squared + 20% margin, clamped to ≥0.55·min(h,w), center-crop fallback). The app **MUST replicate this crop in-browser** on the 16 captured frames *before* resize/normalize, or accuracy will degrade. No model/landmark detector needed — pure pixel diff, ports to JS/WASM. Ref impl: `motion_roi_box()` in `src/asl/preprocess.py`. | **NEW — pending app confirmation (2026-05-23)** |
 | **Model output** | logits over the frozen vocab → softmax; expose top-k classes, P(prompted), top1-top2 margin | proposed |
 | **Pass/fail** | done by app using thresholds in `meta.json`: pass iff argmax==prompt AND P(prompt)≥class_threshold AND (P1-P2)≥class_margin | proposed |
 | **Vocabulary** | **frozen 75 labels** in `meta.json` (label → index → hint metadata); list = `model/artifacts/manifest/proposed_vocab.json`. App's prompts MUST come from this list. | **FROZEN 2026-05-21 (75 signs)** |
@@ -59,6 +60,7 @@ flagged items still need confirmation.
 2. **Vocabulary is data-driven.** Final 75-100 signs depend on the data audit (per-class counts), so the app should not hardcode a word list until the manifest is frozen (Phase 0).
 3. **Threshold/margin live in `meta.json`**, not in app code — the app reads them so calibration updates don't require an app change.
 4. **Model files** belong in a shared `models/` registry the app pins by version; the model agent writes there, the app reads.
+5. **Motion-ROI crop is now a preprocessing step, not just a model.** The best v1 checkpoint (stacked ROI+pretrain, 46% test) expects ROI-cropped input. If the app cannot replicate the crop in-browser, the model agent ships a center-crop fallback checkpoint (43% test) instead — but the ROI crop is classical and cheap, so replicating it is preferred. Decide before ONNX export freezes.
 
 ## D. Decisions (resolved 2026-05-20)
 1. **Framework: PyTorch → ONNX → ONNX Runtime Web.** ✅

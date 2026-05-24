@@ -1,0 +1,23 @@
+# ROI-crop experiment — identical to baseline.yaml except the input cache.
+# Isolates the effect of the motion-based ROI crop vs the center crop.
+cache: artifacts/cache/clips_roi.npz
+norm: artifacts/manifest/norm_roi.json
+manifest: artifacts/manifest/manifest.json
+
+head: attn
+emb: 384
+width: 48
+dropout: 0.3
+tf_layers: 1
+tf_heads: 4
+
+epochs: 60
+batch_size: 32
+lr: 0.003
+weight_decay: 0.05
+warmup_epochs: 3
+label_smoothing: 0.1
+early_stop_patience: 12
+seed: 1337
+
+out_dir: artifacts/checkpoints/roi

@@ -73,6 +73,7 @@ class SignClassifier(nn.Module):
         self.fc = nn.Linear(emb, num_classes)
 
     def forward(self, x):                            # x: (B, F, C, H, W)
+        x = x.contiguous()
         b, f = x.shape[:2]
         e = self.encoder(x.reshape(b * f, *x.shape[2:])).reshape(b, f, -1)
         if self.head_type == "transformer":
