@@ -43,6 +43,25 @@ def test_detdataset_synthetic(tmp_path):
     assert int(labels[0]) == 0
 
 
+def test_detdataset_img_size_scales_tensor_and_boxes(tmp_path):
+    """At img_size=192, a 256² image → (3,192,192) and box [0,0,128,128] → [0,0,96,96]."""
+    from aslv2.detect.data import DetDataset
+
+    img = np.full((256, 256, 3), 200, dtype=np.uint8)
+    img_path = tmp_path / "frame.png"
+    cv2.imwrite(str(img_path), img)
+    manifest = [{"image": str(img_path), "boxes": [[0.0, 0.0, 128.0, 128.0]], "labels": [0]}]
+    manifest_path = tmp_path / "m.json"
+    manifest_path.write_text(json.dumps(manifest))
+
+    norm = {"mean": [0.5, 0.5, 0.5], "std": [0.25, 0.25, 0.25]}
+    ds = DetDataset(str(manifest_path), norm=norm, train=False, img_size=192)
+    tensor, boxes, labels = ds[0]
+
+    assert tensor.shape == (3, 192, 192)
+    np.testing.assert_allclose(boxes[0], [0.0, 0.0, 96.0, 96.0], atol=1.0)  # ×(192/256)
+
+
 def test_detdataset_relative_paths(tmp_path):
     """data_root + relative image path resolves to the correct file."""
     from aslv2.detect.data import DetDataset

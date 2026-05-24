@@ -21,7 +21,7 @@ _IMG_SIZE = 128
 
 class DetDataset(Dataset):
     def __init__(self, manifest_path: str, norm: dict, train: bool = True,
-                 data_root: str = ""):
+                 data_root: str = "", img_size: int = _IMG_SIZE):
         """
         Args:
             manifest_path: path to unified JSON manifest.
@@ -30,6 +30,9 @@ class DetDataset(Dataset):
             data_root: optional root directory prepended to relative image paths.
                 If an image path is absolute, os.path.join returns it unchanged,
                 so absolute entries remain backward-compatible.
+            img_size: square side images are resized to (boxes scaled to match).
+                Defaults to 128; raise it (with matching cfg['img']) to train at
+                higher resolution. Anchors auto-track via anchors.scales_for.
         """
         with open(manifest_path) as f:
             self._entries = json.load(f)
@@ -37,6 +40,7 @@ class DetDataset(Dataset):
         self._std  = np.array(norm["std"],  dtype=np.float32).reshape(3, 1, 1)
         self._train = train
         self._data_root = data_root
+        self._img_size = img_size
 
     def __len__(self):
         return len(self._entries)
@@ -52,11 +56,12 @@ class DetDataset(Dataset):
         boxes  = np.array(entry["boxes"],  dtype=np.float32).reshape(-1, 4)
         labels = np.array(entry["labels"], dtype=np.int64)
 
-        # ----- resize to 128×128 -----
-        img_bgr = cv2.resize(img_bgr, (_IMG_SIZE, _IMG_SIZE),
+        # ----- resize to img_size×img_size -----
+        S = self._img_size
+        img_bgr = cv2.resize(img_bgr, (S, S),
                              interpolation=cv2.INTER_LINEAR)
-        sx = _IMG_SIZE / w_orig
-        sy = _IMG_SIZE / h_orig
+        sx = S / w_orig
+        sy = S / h_orig
         boxes[:, [0, 2]] *= sx
         boxes[:, [1, 3]] *= sy
 
@@ -65,8 +70,8 @@ class DetDataset(Dataset):
             img_bgr, boxes = _augment(img_bgr, boxes)
 
         # Clip boxes to image boundary
-        boxes[:, [0, 2]] = boxes[:, [0, 2]].clip(0, _IMG_SIZE)
-        boxes[:, [1, 3]] = boxes[:, [1, 3]].clip(0, _IMG_SIZE)
+        boxes[:, [0, 2]] = boxes[:, [0, 2]].clip(0, S)
+        boxes[:, [1, 3]] = boxes[:, [1, 3]].clip(0, S)
 
         # Drop degenerate boxes (width < 1 or height < 1 after clipping)
         keep = ((boxes[:, 2] - boxes[:, 0]) >= 1) & ((boxes[:, 3] - boxes[:, 1]) >= 1)

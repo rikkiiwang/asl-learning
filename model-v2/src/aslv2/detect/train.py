@@ -24,7 +24,7 @@ import torch
 import yaml
 from torch.utils.data import DataLoader, Subset
 
-from aslv2.detect.anchors import make_anchors
+from aslv2.detect.anchors import anchors_for
 from aslv2.detect.data import DetDataset
 from aslv2.detect.encode import decode, encode_targets
 from aslv2.detect.loss import det_loss
@@ -183,17 +183,18 @@ def main() -> None:
     dev = device()
     print(f"device={dev}")
 
-    # Anchors (shared across train/val)
-    anchors = make_anchors(img=cfg["img"], stride=16, scales=(32, 64, 96))
+    # Anchors (shared across train/val); scales auto-track cfg["img"]
+    anchors = anchors_for(cfg["img"])
 
     # Datasets
     norm = cfg["norm"]
     data_root = cfg.get("data_root", "")
+    img_size = cfg["img"]
 
     train_ds = DetDataset(cfg["train_manifest"], norm=norm, train=True,
-                          data_root=data_root)
+                          data_root=data_root, img_size=img_size)
     val_ds   = DetDataset(cfg["val_manifest"],   norm=norm, train=False,
-                          data_root=data_root)
+                          data_root=data_root, img_size=img_size)
 
     # Optional caps (smoke / sanity runs)
     if args.max_train is not None and args.max_train < len(train_ds):

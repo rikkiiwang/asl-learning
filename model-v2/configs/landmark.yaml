@@ -15,7 +15,7 @@ norm:
 
 # Model — must match KpDataset crop size
 img:    64
-width:  32
+width:  64
 
 # Optimisation
 lr:                  3.0e-3

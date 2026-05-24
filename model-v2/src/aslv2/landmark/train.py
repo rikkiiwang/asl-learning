@@ -72,9 +72,13 @@ def lr_scale(epoch: int, warmup: int, total: int) -> float:
 
 @torch.no_grad()
 def evaluate(model: Landmark, loader: DataLoader, dev: torch.device) -> dict:
-    """Compute mean PCK@0.2 (ref_size=1.0 in normalised space) over val loader."""
+    """Compute PCK@0.1 (strict gate), PCK@0.2 (legacy), and mean per-keypoint
+    error — all in normalised [0,1] crop-space. PCK@0.1 is the honest metric;
+    PCK@0.2 was lenient enough to pass a near-mean-hand predictor."""
     model.eval()
-    pck_vals: list[float] = []
+    pck10: list[float] = []
+    pck20: list[float] = []
+    errs:  list[float] = []
 
     for imgs, kps_gt in loader:
         imgs   = imgs.to(dev)
@@ -86,10 +90,15 @@ def evaluate(model: Landmark, loader: DataLoader, dev: torch.device) -> dict:
         for i in range(B):
             p_np = pred[i].cpu().float().numpy()     # (21, 2)
             g_np = kps_gt[i].cpu().float().numpy()   # (21, 2)
-            # ref_size=1.0 because kps are already normalised to [0,1]; thr=0.2
-            pck_vals.append(pck(p_np, g_np, ref_size=1.0, thr_frac=0.2))
+            pck10.append(pck(p_np, g_np, ref_size=1.0, thr_frac=0.1))
+            pck20.append(pck(p_np, g_np, ref_size=1.0, thr_frac=0.2))
+            errs.append(float(np.linalg.norm(p_np - g_np, axis=1).mean()))
 
-    return {"pck_02": float(np.mean(pck_vals)) if pck_vals else 0.0}
+    return {
+        "pck_01":   float(np.mean(pck10)) if pck10 else 0.0,
+        "pck_02":   float(np.mean(pck20)) if pck20 else 0.0,
+        "mean_err": float(np.mean(errs))  if errs  else 1.0,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -122,8 +131,10 @@ def main() -> None:
     norm     = cfg["norm"]
     data_root = cfg.get("data_root", "")
 
-    train_ds = KpDataset(cfg["train_manifest"], norm=norm, train=True)
-    val_ds   = KpDataset(cfg["val_manifest"],   norm=norm, train=False)
+    train_ds = KpDataset(cfg["train_manifest"], norm=norm, train=True,
+                         data_root=data_root)
+    val_ds   = KpDataset(cfg["val_manifest"],   norm=norm, train=False,
+                         data_root=data_root)
 
     # Optional caps (smoke / sanity runs)
     if args.max_train is not None and args.max_train < len(train_ds):
@@ -194,18 +205,21 @@ def main() -> None:
 
         # ---- val ----
         val_metrics = evaluate(model, dl_va, dev)
-        score = val_metrics["pck_02"]
+        score = val_metrics["pck_01"]   # gate on the STRICT metric now
 
         lr_now = opt.param_groups[0]["lr"]
         print(
             f"ep {ep:02d}  loss {avg_loss:.4f}  "
-            f"pck@0.2 {score:.3f}  lr {lr_now:.2e}"
+            f"pck@0.1 {score:.3f}  pck@0.2 {val_metrics['pck_02']:.3f}  "
+            f"err {val_metrics['mean_err']:.3f}  lr {lr_now:.2e}"
         )
 
         history.append({
             "epoch":      ep,
             "train_loss": avg_loss,
-            "pck_02":     score,
+            "pck_01":     score,
+            "pck_02":     val_metrics["pck_02"],
+            "mean_err":   val_metrics["mean_err"],
             "lr":         lr_now,
         })
 

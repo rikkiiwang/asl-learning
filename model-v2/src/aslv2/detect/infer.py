@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 import torch
 
-from aslv2.detect.anchors import make_anchors
+from aslv2.detect.anchors import anchors_for
 from aslv2.detect.encode import decode
 
 _IMG_SIZE = 128
@@ -21,6 +21,8 @@ def detect_frame(
     norm: dict,
     score_thr: float = 0.3,
     iou_thr: float = 0.45,
+    *,
+    img_size: int = _IMG_SIZE,
 ) -> dict:
     """Run the detector on a single RGB frame.
 
@@ -42,7 +44,7 @@ def detect_frame(
     orig_h, orig_w = frame_rgb.shape[:2]
 
     # ----- preprocess -----
-    img = cv2.resize(frame_rgb, (_IMG_SIZE, _IMG_SIZE),
+    img = cv2.resize(frame_rgb, (img_size, img_size),
                      interpolation=cv2.INTER_LINEAR)
     img = img.astype(np.float32) / 255.0        # (128, 128, 3)
     mean = np.array(norm["mean"], dtype=np.float32)
@@ -58,8 +60,8 @@ def detect_frame(
     cls_np  = cls_logits[0].cpu().numpy()       # (192, 2)
     box_np  = box_pred[0].cpu().numpy()         # (192, 4)
 
-    # ----- decode with NMS (in 128² space) -----
-    anchors = make_anchors(img=_IMG_SIZE, stride=16, scales=(32, 64, 96))
+    # ----- decode with NMS (in img_size² space) -----
+    anchors = anchors_for(img_size)
     # Clamp box deltas to prevent exp() overflow during decode
     box_np = np.clip(box_np, -10.0, 10.0)
     boxes, scores, labels = decode(anchors, box_np, cls_np,
@@ -75,8 +77,8 @@ def detect_frame(
         labels = labels[valid]
 
     # ----- scale to original-frame pixel space and clip to image bounds -----
-    sx = orig_w / _IMG_SIZE
-    sy = orig_h / _IMG_SIZE
+    sx = orig_w / img_size
+    sy = orig_h / img_size
     if len(boxes) > 0:
         boxes = boxes * np.array([sx, sy, sx, sy], dtype=np.float32)
         # Clip to valid image region

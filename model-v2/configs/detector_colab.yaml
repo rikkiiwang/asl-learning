@@ -12,9 +12,12 @@ norm:
   std:  [0.229, 0.224, 0.225]
 
 # Model
-img:       128
+# img 192 (was 128): 1.5× resolution → 12×12 grid (432 anchors); anchor scales
+# auto-derive to 48/96/144 via anchors.scales_for. width 256 (was 192) adds
+# capacity. Both levers chosen to clear the hand detection-rate gate.
+img:       192
 n_anchors: 3
-width:     192
+width:     256
 
 # Optimisation
 lr:                3.0e-3

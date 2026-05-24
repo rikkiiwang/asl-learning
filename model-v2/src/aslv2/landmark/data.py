@@ -3,16 +3,26 @@
 Manifest format (JSON list):
   [{"image": <path>, "box": [x1,y1,x2,y2], "keypoints": [[x,y]×21]}]
 
-Each entry is a single hand crop: the image is read, the hand region is cropped
-(with a small margin), resized to 64×64, normalised per-channel.  Keypoints are
-given in original-image pixel coords and are normalised to [0,1] in crop space.
+FRAMING (the important part). The hand crop is built from a square window
+*centred on the keypoint bounding box*, sized `scale × hand_extent`:
 
-Augmentations (train=True): brightness/contrast jitter, small rotation+scale
-that also transforms keypoints.  No horizontal flip — left/right is semantically
-meaningful for ASL.
+  - train: scale ~ U(1.2, 2.8), centre jittered, plus rotation ±25° and
+    brightness/contrast jitter. This teaches the model to localise a hand that
+    occupies a VARIABLE fraction of the crop and isn't perfectly centred — the
+    robustness the first model lacked (it assumed FreiHAND's fixed centred
+    framing and collapsed to a mean hand on real, tightly-cropped webcam hands).
+  - val: scale = 2.0, centred, no augmentation (deterministic).
+
+The window is mapped to 64×64 with a single affine warp (border-reflect padding
+handles windows that extend past the image edge). Keypoints are transformed by
+the same matrix and normalised to [0,1] of the crop.
+
+At inference the same square-window framing is applied around the *detector's*
+hand box (see scripts/detect_demo.py), so train and inference framing match.
+The manifest "box" field is no longer used for the crop (kept for compatibility).
 """
 import json
-import math
+import os
 import random
 import numpy as np
 import cv2
@@ -20,115 +30,98 @@ import torch
 from torch.utils.data import Dataset
 
 _CROP_SIZE = 64
-_MARGIN = 0.1   # fractional margin added around the hand box
+
+# Framing / augmentation knobs
+_TRAIN_SCALE = (1.2, 2.8)   # window = scale × hand extent
+_VAL_SCALE   = 2.0
+_JITTER      = 0.25         # centre jitter as a fraction of hand extent
+_ROT_DEG     = 25.0
 
 
 class KpDataset(Dataset):
-    def __init__(self, manifest_path: str, norm: dict, train: bool = True):
+    def __init__(self, manifest_path: str, norm: dict, train: bool = True,
+                 data_root: str = ""):
         """
         Args:
             manifest_path: path to JSON manifest list.
             norm: dict with "mean" and "std", each a list of 3 floats (RGB).
-            train: apply augmentations when True.
+            train: apply framing + photometric augmentation when True.
+            data_root: optional root prepended to relative image paths. Absolute
+                paths pass through unchanged (os.path.join), so manifests with
+                absolute entries stay backward-compatible.
         """
         with open(manifest_path) as f:
             self._entries = json.load(f)
         self._mean = np.array(norm["mean"], dtype=np.float32)
         self._std  = np.array(norm["std"],  dtype=np.float32)
         self._train = train
+        self._data_root = data_root
 
     def __len__(self) -> int:
         return len(self._entries)
 
     def __getitem__(self, idx):
         entry = self._entries[idx]
-        img_bgr = cv2.imread(entry["image"])
+        img_path = os.path.join(self._data_root, entry["image"]) if self._data_root else entry["image"]
+        img_bgr = cv2.imread(img_path)
         if img_bgr is None:
-            raise FileNotFoundError(f"Cannot read image: {entry['image']}")
+            raise FileNotFoundError(f"Cannot read image: {img_path}")
 
-        h_orig, w_orig = img_bgr.shape[:2]
-        box = np.array(entry["box"], dtype=np.float32)   # [x1,y1,x2,y2]
-        kps = np.array(entry["keypoints"], dtype=np.float32)  # (21,2) pixels
+        kps = np.array(entry["keypoints"], dtype=np.float32)   # (21,2) pixels
 
-        # --- add margin around box ---
-        bw = box[2] - box[0]
-        bh = box[3] - box[1]
-        mx = bw * _MARGIN
-        my = bh * _MARGIN
-        x1 = max(0.0, box[0] - mx)
-        y1 = max(0.0, box[1] - my)
-        x2 = min(float(w_orig), box[2] + mx)
-        y2 = min(float(h_orig), box[3] + my)
+        # --- hand extent from keypoints ---
+        kx1, ky1 = kps.min(0)
+        kx2, ky2 = kps.max(0)
+        cx, cy = (kx1 + kx2) / 2.0, (ky1 + ky2) / 2.0
+        extent = max(float(kx2 - kx1), float(ky2 - ky1), 1.0)
 
-        # --- crop ---
-        ix1, iy1, ix2, iy2 = int(round(x1)), int(round(y1)), int(round(x2)), int(round(y2))
-        ix2 = max(ix2, ix1 + 1)
-        iy2 = max(iy2, iy1 + 1)
-        crop_bgr = img_bgr[iy1:iy2, ix1:ix2]
-        crop_h, crop_w = crop_bgr.shape[:2]
-
-        # shift keypoints to crop-local pixel coords
-        kps_local = kps.copy()
-        kps_local[:, 0] -= ix1
-        kps_local[:, 1] -= iy1
-
-        # --- optional augmentation (in crop space) ---
+        # --- choose framing window ---
         if self._train:
-            crop_bgr, kps_local = _augment(crop_bgr, kps_local)
-            crop_h, crop_w = crop_bgr.shape[:2]
+            scale = random.uniform(*_TRAIN_SCALE)
+            cx += random.uniform(-_JITTER, _JITTER) * extent
+            cy += random.uniform(-_JITTER, _JITTER) * extent
+            angle = random.uniform(-_ROT_DEG, _ROT_DEG)
+        else:
+            scale, angle = _VAL_SCALE, 0.0
 
-        # clip keypoints to crop bounds
-        kps_local[:, 0] = kps_local[:, 0].clip(0, crop_w)
-        kps_local[:, 1] = kps_local[:, 1].clip(0, crop_h)
+        win = extent * scale
+        x1, y1 = cx - win / 2.0, cy - win / 2.0
 
-        # --- resize to 64×64 ---
-        crop_bgr = cv2.resize(crop_bgr, (_CROP_SIZE, _CROP_SIZE),
-                              interpolation=cv2.INTER_LINEAR)
-        # scale keypoints to 64×64 space and then normalise to [0,1]
-        kps_norm = kps_local.copy()
-        kps_norm[:, 0] = kps_norm[:, 0] / max(crop_w, 1)
-        kps_norm[:, 1] = kps_norm[:, 1] / max(crop_h, 1)
-        kps_norm = kps_norm.clip(0.0, 1.0)
+        # affine: map the window → 64×64 (+ optional rotation about the crop centre)
+        s = _CROP_SIZE / win
+        M = np.array([[s, 0.0, -x1 * s],
+                      [0.0, s, -y1 * s]], dtype=np.float32)
+        if angle != 0.0:
+            R = cv2.getRotationMatrix2D((_CROP_SIZE / 2.0, _CROP_SIZE / 2.0), angle, 1.0)
+            M = (np.vstack([R, [0, 0, 1]]) @ np.vstack([M, [0, 0, 1]]))[:2].astype(np.float32)
 
-        # --- convert image to normalised tensor ---
+        crop_bgr = cv2.warpAffine(img_bgr, M, (_CROP_SIZE, _CROP_SIZE),
+                                  flags=cv2.INTER_LINEAR,
+                                  borderMode=cv2.BORDER_REFLECT_101)
+
+        # transform keypoints by the same matrix → 64-px space
+        kps_h = np.hstack([kps, np.ones((len(kps), 1), dtype=np.float32)])
+        kps_c = (M @ kps_h.T).T                       # (21,2)
+
+        if self._train:
+            crop_bgr = _photometric(crop_bgr)
+
+        kps_norm = (kps_c / _CROP_SIZE).clip(0.0, 1.0)
+
         img_rgb = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0
-        # (H,W,C) -> (C,H,W)
         tensor = torch.from_numpy(img_rgb.transpose(2, 0, 1))
         mean_t = torch.tensor(self._mean).view(3, 1, 1)
         std_t  = torch.tensor(self._std).view(3, 1, 1)
         tensor = (tensor - mean_t) / std_t
 
-        kp_tensor = torch.from_numpy(kps_norm)  # (21,2) float32
-
-        return tensor, kp_tensor
+        return tensor, torch.from_numpy(kps_norm.astype(np.float32))
 
 
 # ---------------------------------------------------------------------------
-# Augmentation helpers (all applied in pre-resize crop space)
+# Photometric augmentation (brightness / contrast jitter)
 # ---------------------------------------------------------------------------
 
-def _augment(img_bgr: np.ndarray, kps: np.ndarray):
-    """Brightness/contrast jitter + small rotation+scale (keypoints follow)."""
-    # Brightness / contrast jitter
-    alpha = random.uniform(0.8, 1.2)
-    beta  = random.uniform(-20.0, 20.0)
-    img_bgr = np.clip(img_bgr.astype(np.float32) * alpha + beta, 0, 255).astype(np.uint8)
-
-    # Small rotation (±10°) + scale (0.9–1.1)
-    h, w = img_bgr.shape[:2]
-    cx, cy = w / 2.0, h / 2.0
-    angle = random.uniform(-10.0, 10.0)
-    scale = random.uniform(0.9, 1.1)
-    M = cv2.getRotationMatrix2D((cx, cy), angle, scale)
-
-    img_bgr = cv2.warpAffine(img_bgr, M, (w, h),
-                              flags=cv2.INTER_LINEAR,
-                              borderMode=cv2.BORDER_REFLECT_101)
-
-    # Transform keypoints with same matrix
-    ones = np.ones((len(kps), 1), dtype=np.float32)
-    kps_h = np.hstack([kps, ones])          # (21,3)
-    kps_transformed = (M @ kps_h.T).T       # (21,2)
-    kps_transformed = kps_transformed.astype(np.float32)
-
-    return img_bgr, kps_transformed
+def _photometric(img_bgr: np.ndarray) -> np.ndarray:
+    alpha = random.uniform(0.8, 1.2)    # contrast
+    beta  = random.uniform(-20.0, 20.0)  # brightness
+    return np.clip(img_bgr.astype(np.float32) * alpha + beta, 0, 255).astype(np.uint8)

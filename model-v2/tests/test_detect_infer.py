@@ -7,6 +7,26 @@ from aslv2.detect.infer import detect_frame
 _NORM = {"mean": [0.5, 0.5, 0.5], "std": [0.25, 0.25, 0.25]}
 
 
+def test_detect_frame_img_size_runs_and_stays_in_frame():
+    """At img_size=192 the model's 12×12×3=432 anchors must align with anchors_for(192);
+    decode then runs end-to-end and boxes land in original-frame pixel space."""
+    torch.manual_seed(0)
+    model = Detector(n_classes=2, n_anchors=3).eval()
+    with torch.no_grad():
+        for p in model.parameters():
+            p.data *= 5.0   # push some detections over threshold
+
+    frame = np.full((300, 240, 3), 128, dtype=np.uint8)  # non-square original
+    result = detect_frame(model, frame, _NORM, img_size=192)
+
+    assert set(result) == {"hands", "head"}
+    arrs = [result["hands"]] + ([result["head"][None]] if result["head"] is not None else [])
+    for arr in arrs:
+        assert (arr >= 0).all()
+        assert (arr[:, [0, 2]] <= 240).all()   # x within original width
+        assert (arr[:, [1, 3]] <= 300).all()   # y within original height
+
+
 def test_detect_frame_output_structure():
     """detect_frame returns the expected dict structure."""
     model = Detector(n_classes=2, n_anchors=3).eval()
