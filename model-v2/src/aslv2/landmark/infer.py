@@ -45,8 +45,9 @@ def landmark_hand(
     std  = np.array(norm["std"],  dtype=np.float32)
     img  = (img - mean) / std                  # (64,64,3)
 
-    # To tensor (1, 3, 64, 64)
+    # To tensor (1, 3, 64, 64), on the model's device
     tensor = torch.from_numpy(img.transpose(2, 0, 1)).unsqueeze(0)
+    tensor = tensor.to(next(model.parameters()).device)
 
     with torch.no_grad():
         out = model(tensor)   # (1, 21, 2)

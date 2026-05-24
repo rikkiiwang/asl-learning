@@ -52,6 +52,7 @@ def detect_frame(
     img  = (img - mean) / std                   # normalise
 
     tensor = torch.from_numpy(img.transpose(2, 0, 1)).unsqueeze(0)  # (1, 3, H, W)
+    tensor = tensor.to(next(model.parameters()).device)             # match model device
 
     # ----- forward pass -----
     with torch.no_grad():

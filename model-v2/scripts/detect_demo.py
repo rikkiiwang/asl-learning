@@ -17,12 +17,17 @@ Drawing:
 """
 import argparse
 import json
+import sys
 import time
 from pathlib import Path
 
 import cv2
 import numpy as np
 import torch
+
+# Make the script runnable without an editable install (the `pip install -e`
+# .pth occasionally drops off sys.path on this space-containing path).
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from aslv2.detect.infer import detect_frame
 from aslv2.detect.model import Detector
