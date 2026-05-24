@@ -13,27 +13,37 @@ Augmentation (no horizontal flip — flipping can change a sign's meaning):
 import json
 import os
 
+import cv2
 import numpy as np
 import torch
 from torch.utils.data import Dataset
 
 
-def augment_clip(clip, size):
-    """clip: (F,H,W,3) float32 in 0-1. Same transform across all frames.
-    No horizontal flip (can change a sign's meaning)."""
-    b = np.random.uniform(-0.12, 0.12)
-    c = np.random.uniform(0.85, 1.15)
-    clip = np.clip((clip - 0.5) * c + 0.5 + b, 0, 1)
+def augment_clip(clip, size, rng=None):
+    """clip: (F,H,W,3) float32 in 0-1. ONE shared geometric+photometric transform
+    across all frames. No horizontal flip (can change a sign's meaning)."""
+    rng = rng if rng is not None else np.random.default_rng()
+    # photometric: brightness + contrast
+    b = rng.uniform(-0.12, 0.12)
+    c = rng.uniform(0.85, 1.15)
+    clip = np.clip((clip - 0.5) * c + 0.5 + b, 0, 1).astype(np.float32)
     F, H, W, _ = clip.shape
-    scale = np.random.uniform(0.88, 1.0)
+    # geometric: small rotation, same angle for every frame
+    ang = float(rng.uniform(-10.0, 10.0))
+    M = cv2.getRotationMatrix2D((W / 2.0, H / 2.0), ang, 1.0)
+    clip = np.stack([cv2.warpAffine(clip[i], M, (W, H), flags=cv2.INTER_LINEAR,
+                                    borderMode=cv2.BORDER_REFLECT)
+                     for i in range(F)], 0)
+    # geometric: random resized crop (zoom + translate)
+    scale = float(rng.uniform(0.85, 1.0))
     ch, cw = int(H * scale), int(W * scale)
-    y0 = np.random.randint(0, H - ch + 1)
-    x0 = np.random.randint(0, W - cw + 1)
+    y0 = int(rng.integers(0, H - ch + 1))
+    x0 = int(rng.integers(0, W - cw + 1))
     clip = clip[:, y0:y0 + ch, x0:x0 + cw, :]
     t = torch.from_numpy(np.ascontiguousarray(clip)).permute(0, 3, 1, 2)
     t = torch.nn.functional.interpolate(t, size=(size, size),
                                         mode="bilinear", align_corners=False)
-    return t.permute(0, 2, 3, 1).numpy()
+    return t.permute(0, 2, 3, 1).numpy().astype(np.float32)
 
 
 def _load_norm(norm_path):
