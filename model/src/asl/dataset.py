@@ -55,7 +55,8 @@ def _load_norm(norm_path):
 class ClipDataset(Dataset):
     def __init__(self, npz_path, split, norm_path="artifacts/manifest/norm.json",
                  train=False, size=112,
-                 signer_splits="artifacts/manifest/signer_splits.json"):
+                 signer_splits="artifacts/manifest/signer_splits.json",
+                 two_stream=False, flow_norm_path=None):
         data = np.load(npz_path, allow_pickle=True)
         if signer_splits and os.path.exists(signer_splits):
             policy = json.load(open(signer_splits))
@@ -63,8 +64,14 @@ class ClipDataset(Dataset):
             mask = np.array([policy.get(p) == split for p in part])
         else:
             mask = data["split"].astype(str) == split
-        self.X = data["X"][mask]            # (n,16,112,112,3) uint8
+        self.X = data["X"][mask]
         self.y = data["y"][mask].astype(np.int64)
+        self.two_stream = two_stream
+        if two_stream:
+            self.Xflow = data["Xflow"][mask]
+            fm = json.load(open(flow_norm_path))
+            self.fmean = np.array(fm["mean"], dtype=np.float32)
+            self.fstd = np.array(fm["std"], dtype=np.float32)
         self.train = train
         self.size = size
         self.mean, self.std = _load_norm(norm_path)
@@ -73,11 +80,17 @@ class ClipDataset(Dataset):
         return len(self.X)
 
     def __getitem__(self, i):
-        clip = self.X[i].astype(np.float32) / 255.0             # F,H,W,3
+        clip = self.X[i].astype(np.float32) / 255.0
         if self.train:
             clip = augment_clip(clip, self.size)
         clip = (clip - self.mean) / self.std
-        return torch.from_numpy(clip).permute(0, 3, 1, 2).float(), int(self.y[i])
+        rgb = torch.from_numpy(clip).permute(0, 3, 1, 2).float()
+        if not self.two_stream:
+            return rgb, int(self.y[i])
+        flow = self.Xflow[i].astype(np.float32)
+        flow = (flow - self.fmean) / self.fstd
+        flow = torch.from_numpy(flow).permute(0, 3, 1, 2).float()
+        return (rgb, flow), int(self.y[i])
 
 
 class MemmapClipDataset(Dataset):
