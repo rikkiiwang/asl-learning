@@ -25,28 +25,44 @@ def export(ckpt_path, out_dir, version, manifest_path, norm_path, quantize):
     os.makedirs(out_dir, exist_ok=True)
     manifest = json.load(open(manifest_path))
     labels = manifest["labels"]
-    ck = torch.load(ckpt_path, map_location="cpu")
+    ck = torch.load(ckpt_path, map_location="cpu", weights_only=False)
     cfg = ck["cfg"]
-    model = build(len(labels), emb=cfg["emb"], head=cfg["head"],
-                  tf_layers=cfg["tf_layers"], tf_heads=cfg["tf_heads"],
-                  dropout=cfg["dropout"], width=cfg.get("width", 48))
+    two_stream = bool(cfg.get("two_stream", False))
+    if two_stream:
+        model = build(len(labels), two_stream=True, emb=cfg["emb"],
+                      dropout=cfg["dropout"], width=cfg.get("width", 48))
+    else:
+        model = build(len(labels), emb=cfg["emb"], head=cfg["head"],
+                      tf_layers=cfg["tf_layers"], tf_heads=cfg["tf_heads"],
+                      dropout=cfg["dropout"], width=cfg.get("width", 48))
     model.load_state_dict(ck["state_dict"])
     model.eval()
 
     onnx_path = os.path.join(out_dir, f"asl-{version}.onnx")
-    dummy = torch.randn(1, manifest["input"]["frames"], 3,
-                        manifest["input"]["size"], manifest["input"]["size"])
-    torch.onnx.export(
-        model, dummy, onnx_path, input_names=["clip"], output_names=["logits"],
-        dynamic_axes={"clip": {0: "batch"}, "logits": {0: "batch"}},
-        opset_version=17)
-
-    # verify ORT == torch
+    F = manifest["input"]["frames"]; S = manifest["input"]["size"]
     import onnxruntime as ort
-    sess = ort.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
-    with torch.no_grad():
-        ref = model(dummy).numpy()
-    got = sess.run(None, {"clip": dummy.numpy()})[0]
+    if two_stream:
+        d_rgb = torch.randn(1, F, 3, S, S); d_flow = torch.randn(1, F, 2, S, S)
+        torch.onnx.export(
+            model, (d_rgb, d_flow), onnx_path,
+            input_names=["clip", "flow"], output_names=["logits"],
+            dynamic_axes={"clip": {0: "batch"}, "flow": {0: "batch"},
+                          "logits": {0: "batch"}}, opset_version=17,
+            dynamo=False)
+        sess = ort.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
+        with torch.no_grad():
+            ref = model(d_rgb, d_flow).numpy()
+        got = sess.run(None, {"clip": d_rgb.numpy(), "flow": d_flow.numpy()})[0]
+    else:
+        dummy = torch.randn(1, F, 3, S, S)
+        torch.onnx.export(
+            model, dummy, onnx_path, input_names=["clip"], output_names=["logits"],
+            dynamic_axes={"clip": {0: "batch"}, "logits": {0: "batch"}},
+            opset_version=17, dynamo=False)
+        sess = ort.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
+        with torch.no_grad():
+            ref = model(dummy).numpy()
+        got = sess.run(None, {"clip": dummy.numpy()})[0]
     max_diff = float(np.abs(ref - got).max())
     assert max_diff < 1e-3, f"ONNX/torch mismatch {max_diff}"
     print(f"ONNX verified: max|torch-onnx| = {max_diff:.2e}")
@@ -69,6 +85,11 @@ def export(ckpt_path, out_dir, version, manifest_path, norm_path, quantize):
                   for s in manifest["signs"]},
         "notes": "thresholds are placeholders until Phase 4 calibration",
     }
+    if two_stream:
+        fn = json.load(open(norm_path.replace(".json", "_flow.json")))
+        meta["input"]["flow"] = {"channels": 2, "algo": "farneback",
+                                 "mean": fn["mean"], "std": fn["std"],
+                                 "note": "app must compute Farneback (dx,dy) on ROI frames"}
     json.dump(meta, open(os.path.join(out_dir, "meta.json"), "w"), indent=2)
 
     size = os.path.getsize(final_path) / 1e6
