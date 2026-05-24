@@ -39,6 +39,18 @@ def evaluate(model, loader, dev):
     return c / max(t, 1)
 
 
+def save_resume(path, model, opt, epoch, best):
+    torch.save({"model": model.state_dict(), "opt": opt.state_dict(),
+                "epoch": epoch, "best": best}, path)
+
+
+def load_resume(path, model, opt, map_location):
+    ck = torch.load(path, map_location=map_location)
+    model.load_state_dict(ck["model"])
+    opt.load_state_dict(ck["opt"])
+    return ck["epoch"], ck["best"]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cache", default="artifacts/cache/pretrain")
@@ -52,6 +64,8 @@ def main():
     ap.add_argument("--warmup", type=int, default=3)
     ap.add_argument("--seed", type=int, default=1337)
     ap.add_argument("--out", default="artifacts/checkpoints/pretrain")
+    ap.add_argument("--resume", default=None,
+                    help="path to a resume.pt to continue from")
     args = ap.parse_args()
 
     random.seed(args.seed); np.random.seed(args.seed); torch.manual_seed(args.seed)
@@ -81,8 +95,13 @@ def main():
         return 0.5 * (1 + math.cos(math.pi * p))
 
     os.makedirs(args.out, exist_ok=True)
-    best = 0.0
-    for ep in range(args.epochs):
+    resume_path = os.path.join(args.out, "resume.pt")
+    best, start_ep = 0.0, 0
+    if args.resume and os.path.exists(args.resume):
+        start_ep, best = load_resume(args.resume, model, opt, dev)
+        start_ep += 1
+        print(f"resumed from {args.resume} at ep {start_ep} (best {best:.3f})")
+    for ep in range(start_ep, args.epochs):
         for g in opt.param_groups:
             g["lr"] = args.lr * lr_at(ep)
         model.train()
@@ -103,6 +122,7 @@ def main():
                         "emb": args.emb, "width": args.width,
                         "pretrain_classes": ncls, "val_acc": vacc, "epoch": ep},
                        os.path.join(args.out, "encoder.pt"))
+        save_resume(resume_path, model, opt, ep, best)
     print(f"\nBest pretrain val_top1={best:.3f}. Saved encoder -> {args.out}/encoder.pt")
 
 
