@@ -18,12 +18,18 @@ def test_flow_zero_for_static_clip():
 
 
 def test_flow_detects_horizontal_shift():
-    # A vertical bar shifted right by 4 px between frames -> positive dx where the bar is.
-    base = np.zeros((64, 64, 3), dtype=np.uint8)
-    base[:, 20:24] = 255
-    shifted = np.zeros((64, 64, 3), dtype=np.uint8)
-    shifted[:, 24:28] = 255
-    frames = np.stack([base, shifted], 0)
+    # A *textured* patch shifted right by 3 px produces a dominant horizontal flow
+    # component. A textureless solid shape can't be tracked by Farneback (the
+    # aperture problem — no gradients to follow), so the patch must have texture.
+    rng = np.random.default_rng(0)
+    patch = rng.integers(0, 256, (24, 24, 3), dtype=np.uint8)   # one fixed patch
+    def make(shift):
+        img = np.full((64, 64, 3), 128, np.uint8)
+        img[20:44, 20 + shift:44 + shift] = patch
+        return img
+    frames = np.stack([make(0), make(3)], 0)
     flow = compute_flow(frames)
-    # mean dx over the central region should be clearly positive
-    assert flow[1, 20:44, 18:30, 0].mean() > 0.3
+    dx = flow[1, 24:40, 24:40, 0].mean()
+    dy = flow[1, 24:40, 24:40, 1].mean()
+    assert abs(dx) > 1.5         # clear horizontal motion detected (~3 px shift)
+    assert abs(dx) > abs(dy)     # and the horizontal component dominates
