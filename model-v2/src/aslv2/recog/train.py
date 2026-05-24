@@ -75,9 +75,10 @@ def main():
     set_seed(cfg["seed"]); dev = device(); print(f"device={dev}")
     cache = cfg["cache"]; splits = cfg.get("signer_splits", DEFAULT_SPLITS)
 
-    tr = RecogDataset(cache, "train", splits, train=True, kp_jitter=cfg["kp_jitter"])
-    va = RecogDataset(cache, "val", splits, train=False)
-    te = RecogDataset(cache, "test", splits, train=False)
+    lc = cfg.get("variant", "a") == "b"     # only Recognizer B needs the crops
+    tr = RecogDataset(cache, "train", splits, train=True, kp_jitter=cfg["kp_jitter"], load_crops=lc)
+    va = RecogDataset(cache, "val", splits, train=False, load_crops=lc)
+    te = RecogDataset(cache, "test", splits, train=False, load_crops=lc)
     print(f"train={len(tr)}  val={len(va)}  test={len(te)}")
 
     nw = cfg.get("num_workers", 0)

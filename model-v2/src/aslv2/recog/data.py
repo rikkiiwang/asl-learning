@@ -21,7 +21,7 @@ _GEOM_AUG_DIMS = 90
 
 class RecogDataset(Dataset):
     def __init__(self, cache, split: str, split_map, train: bool = False,
-                 kp_jitter: float = 0.01):
+                 kp_jitter: float = 0.01, load_crops: bool = True):
         """
         Args:
             cache:     path to the .npz cache (or an in-memory mapping) with arrays
@@ -40,11 +40,12 @@ class RecogDataset(Dataset):
         idx = np.array([i for i, p in enumerate(part) if split_map.get(p) == split],
                        dtype=int)
         self._geom = np.asarray(data["geom"])[idx]
-        self._crops = np.asarray(data["crops"])[idx]
+        self._crops = np.asarray(data["crops"])[idx] if load_crops else None
         self._y = np.asarray(data["y"])[idx]
         self._part = part[idx]
         self.train = train
         self.kp_jitter = kp_jitter
+        self.load_crops = load_crops
 
     def __len__(self) -> int:
         return len(self._y)
@@ -57,5 +58,8 @@ class RecogDataset(Dataset):
         if self.train and self.kp_jitter > 0:
             noise = np.random.randn(g.shape[0], _GEOM_AUG_DIMS).astype(np.float32)
             g[:, :_GEOM_AUG_DIMS] += noise * self.kp_jitter
-        c = self._crops[i].astype(np.float32)
-        return torch.from_numpy(g), torch.from_numpy(c), int(self._y[i])
+        if self._crops is None:
+            c = torch.empty(0)
+        else:
+            c = torch.from_numpy(self._crops[i].astype(np.float32))
+        return torch.from_numpy(g), c, int(self._y[i])
