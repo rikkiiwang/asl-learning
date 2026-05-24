@@ -86,7 +86,7 @@ def compute_flow(frames_rgb):
     return flow
 
 
-def load_clip(path, k, size, roi=False):
+def load_clip(path, k, size, roi=False, with_flow=False):
     cap = cv2.VideoCapture(path)
     frames = []
     while True:
@@ -111,6 +111,9 @@ def load_clip(path, k, size, roi=False):
         f = f[y0:y0 + s, x0:x0 + s]
         f = cv2.resize(f, (size, size), interpolation=cv2.INTER_AREA)
         out[i] = cv2.cvtColor(f, cv2.COLOR_BGR2RGB)
+    if with_flow:
+        flow = compute_flow(out)                       # (k,size,size,2) float32
+        return out, flow.astype(np.float16)
     return out
 
 
@@ -124,6 +127,8 @@ def main():
     ap.add_argument("--size", type=int, default=112)
     ap.add_argument("--roi", action="store_true",
                     help="motion-based ROI crop instead of center crop")
+    ap.add_argument("--with-flow", action="store_true",
+                    help="also compute+store Farneback flow (2ch float16)")
     args = ap.parse_args()
 
     manifest = json.load(open(args.manifest))
@@ -131,6 +136,8 @@ def main():
              for s in manifest["signs"] for c in s["clips"]]
 
     X = np.empty((len(clips), args.frames, args.size, args.size, 3), dtype=np.uint8)
+    Xflow = (np.empty((len(clips), args.frames, args.size, args.size, 2),
+                      dtype=np.float16) if args.with_flow else None)
     y = np.empty(len(clips), dtype=np.int64)
     split = np.empty(len(clips), dtype=object)
     participant = np.empty(len(clips), dtype=object)
@@ -138,20 +145,31 @@ def main():
 
     ok = 0
     for i, (fname, lab, sp, pid) in enumerate(clips):
-        clip = load_clip(os.path.join(args.videos, fname), args.frames, args.size,
-                         roi=args.roi)
-        if clip is None:
+        res = load_clip(os.path.join(args.videos, fname), args.frames, args.size,
+                        roi=args.roi, with_flow=args.with_flow)
+        if res is None:
             print(f"[SKIP] could not decode {fname}")
             continue
+        if args.with_flow:
+            clip, fl = res
+        else:
+            clip = res
         X[ok], y[ok], split[ok], participant[ok], files[ok] = clip, lab, sp, pid, fname
+        if args.with_flow:
+            Xflow[ok] = fl
         ok += 1
         if ok % 250 == 0:
             print(f"  processed {ok}/{len(clips)} ...")
     X, y, split, participant, files = X[:ok], y[:ok], split[:ok], participant[:ok], files[:ok]
+    if args.with_flow:
+        Xflow = Xflow[:ok]
 
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
-    np.savez_compressed(args.out, X=X, y=y, split=split.astype(str),
-                        participant=participant.astype(str), files=files.astype(str))
+    save_kw = dict(X=X, y=y, split=split.astype(str),
+                   participant=participant.astype(str), files=files.astype(str))
+    if args.with_flow:
+        save_kw["Xflow"] = Xflow
+    np.savez_compressed(args.out, **save_kw)
 
     # float64 accumulation — float32 mean over ~2e8 elements loses precision badly
     tr = X[split == "train"].reshape(-1, 3).astype(np.float64) / 255.0
@@ -160,6 +178,14 @@ def main():
     norm = {"mean": mean, "std": std}
     os.makedirs(os.path.dirname(args.norm_out), exist_ok=True)
     json.dump(norm, open(args.norm_out, "w"), indent=2)
+
+    if args.with_flow:
+        flow_tr = Xflow[split == "train"].reshape(-1, 2).astype(np.float64)
+        flow_norm = {"mean": flow_tr.mean(0).tolist(),
+                     "std": (flow_tr.std(0) + 1e-6).tolist()}
+        flow_norm_out = args.norm_out.replace(".json", "_flow.json")
+        json.dump(flow_norm, open(flow_norm_out, "w"), indent=2)
+        print(f"flow norm -> {flow_norm_out}: {flow_norm}")
 
     sz = os.path.getsize(args.out) / 1e9
     print(f"\nCached {ok} clips -> {args.out} ({sz:.2f} GB)")
