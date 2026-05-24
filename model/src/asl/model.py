@@ -23,12 +23,12 @@ class SepConv(nn.Module):
 
 
 class FrameEncoder(nn.Module):
-    """112x112x3 -> embedding of dim `emb`. `width` scales channel capacity."""
-    def __init__(self, emb=384, width=48):
+    """112x112xin_ch -> embedding of dim `emb`. `width` scales channel capacity."""
+    def __init__(self, emb=384, width=48, in_ch=3):
         super().__init__()
         w = width
         self.stem = nn.Sequential(
-            nn.Conv2d(3, w, 3, 2, 1, bias=False),    # 56
+            nn.Conv2d(in_ch, w, 3, 2, 1, bias=False),    # 56
             nn.BatchNorm2d(w), nn.ReLU(inplace=True))
         self.body = nn.Sequential(
             SepConv(w, 2 * w, stride=2),             # 28
@@ -81,7 +81,31 @@ class SignClassifier(nn.Module):
         return self.fc(self.drop(self.pool(e)))
 
 
-def build(num_classes, **kw):
+class TwoStreamClassifier(nn.Module):
+    """RGB appearance stream + optical-flow motion stream, late-fused."""
+    def __init__(self, num_classes, emb=384, width=48, dropout=0.3, flow_ch=2):
+        super().__init__()
+        self.encoder = FrameEncoder(emb, width, in_ch=3)        # name matches ckpt
+        self.encoder_flow = FrameEncoder(emb, width, in_ch=flow_ch)
+        self.pool = AttnPool(emb)
+        self.pool_flow = AttnPool(emb)
+        self.drop = nn.Dropout(dropout)
+        self.fc = nn.Linear(2 * emb, num_classes)
+
+    def forward(self, rgb, flow):                    # (B,F,3,H,W), (B,F,2,H,W)
+        rgb, flow = rgb.contiguous(), flow.contiguous()
+        b, f = rgb.shape[:2]
+        er = self.encoder(rgb.reshape(b * f, *rgb.shape[2:])).reshape(b, f, -1)
+        ef = self.encoder_flow(flow.reshape(b * f, *flow.shape[2:])).reshape(b, f, -1)
+        fused = torch.cat([self.pool(er), self.pool_flow(ef)], dim=1)
+        return self.fc(self.drop(fused))
+
+
+def build(num_classes, two_stream=False, **kw):
+    if two_stream:
+        return TwoStreamClassifier(
+            num_classes, emb=kw.get("emb", 384), width=kw.get("width", 48),
+            dropout=kw.get("dropout", 0.3))
     return SignClassifier(num_classes, **kw)
 
 
