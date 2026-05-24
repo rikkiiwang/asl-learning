@@ -36,11 +36,11 @@ def set_seed(s):
 
 
 @torch.no_grad()
-def evaluate(model, loader, dev):
+def evaluate(model, loader, dev, fwd):
     model.eval()
     correct = total = 0
     for x, y in loader:
-        logits = model(x.to(dev))
+        logits = fwd(model, x)
         correct += (logits.argmax(1).cpu() == y).sum().item()
         total += len(y)
     return correct / max(total, 1)
@@ -57,29 +57,50 @@ def main():
         cfg["head"] = args.head
     if args.epochs:
         cfg["epochs"] = args.epochs
+    two_stream = bool(cfg.get("two_stream", False))
 
     set_seed(cfg["seed"])
     dev = device()
     print(f"device={dev}  head={cfg['head']}")
 
+    def fwd(model, x):
+        if two_stream:
+            rgb, flow = x
+            return model(rgb.to(dev), flow.to(dev))
+        return model(x.to(dev))
+
     n_classes = len(json.load(open(cfg["manifest"]))["labels"])
-    tr = ClipDataset(cfg["cache"], "train", cfg["norm"], train=True)
-    va = ClipDataset(cfg["cache"], "val", cfg["norm"], train=False)
-    te = ClipDataset(cfg["cache"], "test", cfg["norm"], train=False)
+    fnorm = cfg.get("flow_norm")
+    tr = ClipDataset(cfg["cache"], "train", cfg["norm"], train=True,
+                     two_stream=two_stream, flow_norm_path=fnorm)
+    va = ClipDataset(cfg["cache"], "val", cfg["norm"], train=False,
+                     two_stream=two_stream, flow_norm_path=fnorm)
+    te = ClipDataset(cfg["cache"], "test", cfg["norm"], train=False,
+                     two_stream=two_stream, flow_norm_path=fnorm)
     print(f"classes={n_classes}  train={len(tr)} val={len(va)} test={len(te)}")
 
     dl_tr = DataLoader(tr, cfg["batch_size"], shuffle=True, num_workers=4, drop_last=True)
     dl_va = DataLoader(va, cfg["batch_size"], shuffle=False, num_workers=2)
     dl_te = DataLoader(te, cfg["batch_size"], shuffle=False, num_workers=2)
 
-    model = build(n_classes, emb=cfg["emb"], head=cfg["head"],
-                  tf_layers=cfg["tf_layers"], tf_heads=cfg["tf_heads"],
-                  dropout=cfg["dropout"], width=cfg.get("width", 48)).to(dev)
+    if two_stream:
+        model = build(n_classes, two_stream=True, emb=cfg["emb"],
+                      dropout=cfg["dropout"], width=cfg.get("width", 48)).to(dev)
+    else:
+        model = build(n_classes, emb=cfg["emb"], head=cfg["head"],
+                      tf_layers=cfg["tf_layers"], tf_heads=cfg["tf_heads"],
+                      dropout=cfg["dropout"], width=cfg.get("width", 48)).to(dev)
     pre = cfg.get("pretrained_encoder")
     if pre and os.path.exists(pre):
-        ck = torch.load(pre, map_location=dev)
+        ck = torch.load(pre, map_location=dev, weights_only=False)
         model.encoder.load_state_dict(ck["encoder"])
-        if "pool" in ck:
+        if two_stream:
+            # warm-start flow encoder body from RGB; keep its fresh 2ch stem
+            flow_sd = {k: v for k, v in ck["encoder"].items()
+                       if not k.startswith("stem.")}
+            model.encoder_flow.load_state_dict(flow_sd, strict=False)
+            print("warm-started flow encoder body from RGB encoder")
+        elif "pool" in ck:
             model.pool.load_state_dict(ck["pool"])
         print(f"loaded pretrained encoder from {pre} "
               f"(pretrain val {ck.get('val_acc')}, {ck.get('pretrain_classes')} classes)")
@@ -104,12 +125,12 @@ def main():
         tl = 0.0
         for x, y in dl_tr:
             opt.zero_grad()
-            loss = crit(model(x.to(dev)), y.to(dev))
+            loss = crit(fwd(model, x), y.to(dev))
             loss.backward()
             opt.step()
             tl += loss.item() * len(y)
         tl /= len(tr)
-        vacc = evaluate(model, dl_va, dev)
+        vacc = evaluate(model, dl_va, dev, fwd)
         history.append({"epoch": ep, "train_loss": tl, "val_acc": vacc,
                         "lr": opt.param_groups[0]["lr"]})
         print(f"ep {ep:02d}  loss {tl:.3f}  val_top1 {vacc:.3f}")
@@ -126,7 +147,7 @@ def main():
 
     ck = torch.load(os.path.join(cfg["out_dir"], "best.pt"), map_location=dev)
     model.load_state_dict(ck["state_dict"])
-    test_acc = evaluate(model, dl_te, dev)
+    test_acc = evaluate(model, dl_te, dev, fwd)
     json.dump({"history": history, "best_val": best, "best_epoch": best_ep,
                "test_acc": test_acc},
               open(os.path.join(cfg["out_dir"], "history.json"), "w"), indent=2)
