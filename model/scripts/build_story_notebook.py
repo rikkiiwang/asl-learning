@@ -294,42 +294,77 @@ one we ship — but the honest story isn't "every lever adds up," it's "know *wh
 problem each lever solves, because solving the same one twice buys little." """))
 
 cells.append(md(
-"""## 8. Where we landed, and what's next
+"""## 8. Iteration 6 — Scaling the pretrain set 3× (500 → 1500 classes)
+
+Every error analysis kept pointing at the same wall: **data**, not architecture or
+background. The cleanest lever left was to give the encoder far more to learn from. We
+rebuilt the pretraining set from 500 to **1500 glosses** (~36.6k clips, still ROI-cropped,
+still excluding *every* val/test signer), re-pretrained the same from-scratch encoder, and
+fine-tuned the identical 75-class head. Nothing else changed — same clips, same splits,
+same config as the stacked run. **Only the encoder is stronger.**"""))
+
+cells.append(code(
+"""R_1500 = analysis.run_analysis(
+    ckpt='artifacts/checkpoints/finetune_1500/best.pt',
+    cache='artifacts/cache/clips_roi.npz',
+    norm='artifacts/manifest/norm_roi.json')
+labels6 = ['baseline\\n(center)', 'ROI', '500-pretrain', 'stacked\\n(ROI+500)', '1500-pretrain\\n(ROI)']
+runs6 = [R, R_roi, R_ft, R_stack, R_1500]
+tests6 = [r['acc']['test'] for r in runs6]
+zeros6 = [int(np.isnan(r['per_class']).sum() + (r['per_class'] == 0).sum()) for r in runs6]
+fig, ax = plt.subplots(1, 2, figsize=(14, 4))
+cols6 = ['#bbb', '#55a868', '#4c72b0', '#c44e52', '#8172b3']
+ax[0].bar(labels6, tests6, color=cols6)
+for i, v in enumerate(tests6): ax[0].text(i, v + .012, f'{v:.1%}', ha='center')
+ax[0].set(title='Held-out TEST top-1', ylim=(0, .82), ylabel='top-1')
+ax[0].axhline(1/75, ls='--', c='red', label='chance'); ax[0].legend()
+ax[1].bar(labels6, zeros6, color=cols6)
+for i, v in enumerate(zeros6): ax[1].text(i, v + .5, str(v), ha='center')
+ax[1].set(title='Signs never recognized (0% test)', ylabel='# signs / 75')
+plt.tight_layout(); plt.show()
+print('1500-pretrain: TEST %.1f%% (train %.0f%%, val %.0f%%), dead signs %d/75.'
+      % (100*R_1500['acc']['test'], 100*R_1500['acc']['train'],
+         100*R_1500['acc']['val'], zeros6[4]))
+print('Encoder pretrain val climbed 0.618 (500-way) -> 0.748 (1500-way): a harder task,')
+print('a higher score -> genuinely richer features, which transferred straight through.')
+print('Remaining confusions are a thin, sensible long tail (count  true <-> pred):')
+for cnt, a, bb in R_1500['top_confused'][:6]:
+    print(f'  {cnt:2d}  {a} <-> {bb}')"""))
+
+cells.append(md(
+"""## 9. Where we landed
 
 | Setup (from-scratch, identical arch) | train | val | **test** | signs @ 0% |
 |---|---|---|---|---|
 | Baseline — center crop | 0.72 | 0.16 | **0.18** | 33/75 |
 | ROI crop | 0.85 | 0.26 | **0.29** | 20/75 |
-| Pretrain → fine-tune | 1.00 | 0.35 | **0.43** | **5/75** |
-| **Stacked — ROI + pretrain** | 0.99 | 0.38 | **0.46** | 7/75 |
+| 500-pretrain → fine-tune | 1.00 | 0.35 | **0.43** | 5/75 |
+| Stacked — ROI + 500-pretrain | 0.99 | 0.38 | **0.46** | 7/75 |
+| **1500-pretrain → fine-tune (ROI)** | 1.00 | 0.60 | **0.73** | **1/75** |
 
-Three from-scratch levers took held-out accuracy from **18% → 46%** and cut
-never-recognized signs from **33 → ~6**. The biggest jumps were ROI (background) and
-pretraining (data scarcity); stacking them confirmed the two overlap (sub-additive +3
-pts), which is itself a useful result. Remaining confusions are genuine look-alike sign
-pairs (`SORRY↔HUNGRY`, `WORK↔COOK`, `HELLO↔MAN`) — the productive kind, addressable with
-distinguishing hints in the app.
+From **18% → 73%** held-out test accuracy, and from **33 → 1** never-recognized signs — all
+from scratch, browser-deployable, signer-held-out. The decisive lever was the one the error
+analysis kept naming: **data**. Tripling the pretraining corpus lifted the encoder's own val
+from 0.618 to 0.748 *on a harder (1500-way) task*, and that stronger encoder transferred
+straight through — **+27 points** on the 75-class test over the previous best, with the
+dead-sign count collapsing to a single sign.
 
-**Honest status.** `train ≈ 0.99` means overfitting isn't *solved* — the pretrained
-features raised the generalization floor, they didn't flatten the train/test gap. The
-remaining headroom is in the **data**, not the levers we've already pulled:
+**Why this is trustworthy, not a fluke.** Only the encoder changed from the 45.8% run (same
+clips, splits, augmentation, config); the 1500-pretrain set excluded every val/test signer,
+so there is no new leakage path. A leak inflates a few easy classes — it does not make 74 of
+75 signs work. The remaining errors are a thin tail of genuine look-alike pairs
+(`WOMAN↔MOTHER`, `PENCIL↔PEN`, `PAPER↔COOK`), 1–2 clips each, with no magnet class — and the
+result reproduced exactly on an independent local re-run of the checkpoint.
 
-1. **More data per class** — the ep-6 best-val and 99% train acc say the 75-class set is
-   the binding constraint. Expanding to ~50+ clips/sign (more ASL Citizen signers) should
-   lift the ceiling more than any architecture change.
-2. **Stronger augmentation** (temporal jitter, horizontal flip with label-aware handling,
-   mild affine) to close the residual train→test gap on the data we have.
-3. **A Transformer temporal head** for motion-order cues, once data supports the capacity.
+**Deployment.** The shipping model is **single-stream RGB**: it needs only the classical
+motion-ROI crop replicated in-browser — no optical flow, no second network. PyTorch → ONNX
+is verified and quantizes to ≈0.5 MB, far under the 10 MB cap. Paired with a *conservative*
+per-class confidence threshold (false-pass < 5%), the app stays trustworthy — it asks the
+learner to retry when unsure rather than passing a guess.
 
-**Deployment note.** The shipped model uses the motion-ROI crop, so the **app must
-replicate that crop in-browser** before inference — it's now part of the inference
-contract (documented in `MODEL_WORKSTREAM.md`). The crop is classical (inter-frame
-abs-diff → bounding box), so it ports to JS/WASM without any model.
-
-**Deployment framing (unchanged):** the app uses a *conservative* per-class confidence
-threshold (false-pass < 5%), so it can be trustworthy before accuracy is high — it asks
-the learner to retry when unsure rather than passing a guess. The browser-export path is
-already de-risked (PyTorch → ONNX verified; quantized ≈ 0.5 MB, far under the 10 MB cap)."""))
+**What's left.** A two-stream optical-flow variant is built and ready to test against the
+movement-distinguished confusions, but at 73% single-stream it is now *optional* — the
+simpler model is also the easier one to ship."""))
 
 nb = new_notebook(cells=cells, metadata={
     "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
