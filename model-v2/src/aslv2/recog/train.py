@@ -71,6 +71,8 @@ def main():
     ap.add_argument("--use-velocity", action="store_true")
     ap.add_argument("--kp-jitter", type=float, default=None)
     ap.add_argument("--dropout", type=float, default=None)
+    ap.add_argument("--strong-aug", action="store_true")
+    ap.add_argument("--seed", type=int, default=None)
     ap.add_argument("--out-dir", default=None)
     args = ap.parse_args()
     cfg = yaml.safe_load(open(args.config))
@@ -81,6 +83,10 @@ def main():
             cfg[key] = val
     if args.use_velocity:
         cfg["use_velocity"] = True
+    if args.strong_aug:
+        cfg["strong_aug"] = True
+    if args.seed is not None:
+        cfg["seed"] = args.seed
     if cfg.get("variant", "a") != "a":
         raise SystemExit("only variant 'a' is implemented; B arrives in Task 6")
 
@@ -88,7 +94,8 @@ def main():
     cache = cfg["cache"]; splits = cfg.get("signer_splits", DEFAULT_SPLITS)
 
     lc = cfg.get("variant", "a") == "b"     # only Recognizer B needs the crops
-    tr = RecogDataset(cache, "train", splits, train=True, kp_jitter=cfg["kp_jitter"], load_crops=lc)
+    tr = RecogDataset(cache, "train", splits, train=True, kp_jitter=cfg["kp_jitter"],
+                      load_crops=lc, strong_aug=cfg.get("strong_aug", False))
     va = RecogDataset(cache, "val", splits, train=False, load_crops=lc)
     te = RecogDataset(cache, "test", splits, train=False, load_crops=lc)
     print(f"train={len(tr)}  val={len(va)}  test={len(te)}")

@@ -4,9 +4,11 @@ cache:     artifacts/cache/constellation_clips.npz
 n_classes: 75
 
 # Model
-emb:       192
-head:      attn        # attn | transformer
-dropout:   0.3
+emb:          192
+head:         transformer   # attn | transformer  (transformer models sign dynamics)
+dropout:      0.3
+use_velocity: true          # per-frame Δgeometry (motion) — signs are defined by motion
+strong_aug:   true          # temporal warp + pose rot/scale + frame dropout (thin-data regularizer)
 
 # Optimisation
 lr:                2.0e-3
