@@ -45,7 +45,7 @@ def save_resume(path, model, opt, epoch, best):
 
 
 def load_resume(path, model, opt, map_location):
-    ck = torch.load(path, map_location=map_location)
+    ck = torch.load(path, map_location=map_location, weights_only=False)
     model.load_state_dict(ck["model"])
     opt.load_state_dict(ck["opt"])
     return ck["epoch"], ck["best"]
@@ -95,6 +95,8 @@ def main():
         return 0.5 * (1 + math.cos(math.pi * p))
 
     os.makedirs(args.out, exist_ok=True)
+    # resume snapshots are always written into the current --out dir,
+    # even when --resume points elsewhere
     resume_path = os.path.join(args.out, "resume.pt")
     best, start_ep = 0.0, 0
     if args.resume and os.path.exists(args.resume):
