@@ -46,6 +46,38 @@ def evaluate(model, loader, dev, fwd):
     return correct / max(total, 1)
 
 
+def make_optimizer(model, lr, weight_decay, encoder_lr_scale=1.0):
+    """Build AdamW with optional discriminative/frozen encoder LR.
+
+    encoder_lr_scale: 1.0 = all params at `lr` (default, unchanged behavior);
+    0.0 = freeze encoder (requires_grad=False), train only the head;
+    else encoder params get lr*scale, head gets lr.
+    Each param group carries a `base_lr` the LR schedule scales by.
+    'Encoder' = params whose name starts with 'encoder'.
+    """
+    if encoder_lr_scale == 1.0:
+        opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+        for g in opt.param_groups:
+            g["base_lr"] = lr
+        return opt
+    enc = [p for n, p in model.named_parameters() if n.startswith("encoder")]
+    head = [p for n, p in model.named_parameters() if not n.startswith("encoder")]
+    if encoder_lr_scale == 0.0:
+        for p in enc:
+            p.requires_grad = False
+        opt = torch.optim.AdamW(head, lr=lr, weight_decay=weight_decay)
+        for g in opt.param_groups:
+            g["base_lr"] = lr
+        return opt
+    opt = torch.optim.AdamW(
+        [{"params": enc, "lr": lr * encoder_lr_scale},
+         {"params": head, "lr": lr}],
+        lr=lr, weight_decay=weight_decay)
+    opt.param_groups[0]["base_lr"] = lr * encoder_lr_scale
+    opt.param_groups[1]["base_lr"] = lr
+    return opt
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", required=True)
@@ -104,8 +136,8 @@ def main():
             model.pool.load_state_dict(ck["pool"])
         print(f"loaded pretrained encoder from {pre} "
               f"(pretrain val {ck.get('val_acc')}, {ck.get('pretrain_classes')} classes)")
-    opt = torch.optim.AdamW(model.parameters(), lr=cfg["lr"],
-                            weight_decay=cfg["weight_decay"])
+    opt = make_optimizer(model, cfg["lr"], cfg["weight_decay"],
+                         cfg.get("encoder_lr_scale", 1.0))
     crit = torch.nn.CrossEntropyLoss(label_smoothing=cfg["label_smoothing"])
 
     warm, total = cfg["warmup_epochs"], cfg["epochs"]
@@ -120,7 +152,7 @@ def main():
     history, best, best_ep, patience = [], 0.0, -1, 0
     for ep in range(total):
         for g in opt.param_groups:
-            g["lr"] = cfg["lr"] * lr_at(ep)
+            g["lr"] = g["base_lr"] * lr_at(ep)
         model.train()
         tl = 0.0
         for x, y in dl_tr:
