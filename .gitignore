@@ -29,3 +29,6 @@ model-v2/artifacts/*.onnx
 # Large local-only artifacts
 *.zip
 frames.dat
+
+# Audit frame PNGs (large/binary; stub JSON is committed separately)
+model-v2/artifacts/audit/frames/

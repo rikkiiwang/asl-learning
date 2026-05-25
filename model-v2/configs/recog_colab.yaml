@@ -1,0 +1,34 @@
+# Recognizer A — Colab run with MS-ASL added to train (ASL Citizen + WLASL + MS-ASL).
+# Same model/optim as recog_a.yaml; only the cache paths differ (slim geometry-only
+# caches uploaded + msasl_clips.npz cached on Colab). val/test stay pure ASL Citizen
+# signer-held-out, so the number is directly comparable to the 47.9% test baseline.
+variant:   a
+cache:     artifacts/cache/constellation_clips.slim.npz   # val/test + AC train
+signer_splits: artifacts/manifest/signer_splits.json      # bundled (from model/)
+n_classes: 75
+
+# Model (identical to recog_a)
+emb:          192
+head:         transformer
+dropout:      0.3
+use_velocity: true
+strong_aug:   true
+
+# Optimisation (identical to recog_a — same 80-epoch cosine schedule)
+lr:                2.0e-3
+weight_decay:      0.05
+epochs:            80
+batch_size:        64
+warmup_epochs:     3
+label_smoothing:   0.1
+early_stop_patience: 15
+kp_jitter:         0.01
+seed:              1337
+num_workers:       2
+
+out_dir:   artifacts/checkpoints/recog_a
+
+# Both extra corpora appended to TRAIN only (participants WLASL/MSASL -> train).
+extra_cache:
+  - artifacts/cache/wlasl_clips.slim.npz
+  - artifacts/cache/msasl_clips.npz

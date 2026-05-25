@@ -21,6 +21,8 @@ def load_audit_slice(path) -> list[AuditFrame]:
     frames: list[AuditFrame] = []
     for i, e in enumerate(raw):
         hands = np.asarray(e["hands"], dtype=float)
+        if hands.ndim == 1 and hands.size == 0:
+            hands = hands.reshape(0, 4)          # [] stub → (0,4) unlabeled
         if hands.ndim != 2 or hands.shape[1] != 4:
             raise ValueError(f"frame {i}: hands must be (H,4) xyxy")
         head = None if e.get("head") is None else np.asarray(e["head"], float)

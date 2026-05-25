@@ -1,0 +1,1570 @@
+[
+  {
+    "image": "artifacts/audit/frames/15890366051589533-APPLE.png",
+    "hands": [
+      [
+        129.0,
+        301.0,
+        301.0,
+        433.0
+      ]
+    ],
+    "head": [
+      205.0,
+      83.0,
+      445.0,
+      403.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/9959161578599864-BOOK.png",
+    "hands": [
+      [
+        135.0,
+        222.0,
+        284.0,
+        411.0
+      ],
+      [
+        370.0,
+        209.0,
+        479.0,
+        398.0
+      ]
+    ],
+    "head": [
+      220.0,
+      26.0,
+      405.0,
+      262.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/42853167798970104-LEARN.png",
+    "hands": [
+      [
+        166.0,
+        124.0,
+        283.0,
+        249.0
+      ],
+      [
+        271.0,
+        337.0,
+        414.0,
+        437.0
+      ]
+    ],
+    "head": [
+      230.0,
+      8.0,
+      394.0,
+      204.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/35455702192899774-LEARN.png",
+    "hands": [
+      [
+        290.0,
+        44.0,
+        454.0,
+        216.0
+      ],
+      [
+        169.0,
+        391.0,
+        386.0,
+        480.0
+      ]
+    ],
+    "head": [
+      215.0,
+      16.0,
+      379.0,
+      271.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/9140450917748142-DRINK.png",
+    "hands": [],
+    "head": [
+      251.0,
+      2.0,
+      451.0,
+      219.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/8754454943280736-COOK.png",
+    "hands": [
+      [
+        233.0,
+        269.0,
+        474.0,
+        427.0
+      ]
+    ],
+    "head": [
+      230.0,
+      18.0,
+      405.0,
+      228.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/6864880477398156-COLD.png",
+    "hands": [
+      [
+        61.0,
+        249.0,
+        176.0,
+        383.0
+      ],
+      [
+        424.0,
+        234.0,
+        549.0,
+        362.0
+      ]
+    ],
+    "head": [
+      234.0,
+      22.0,
+      418.0,
+      251.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/16927688445154376-WHO.png",
+    "hands": [],
+    "head": [
+      221.0,
+      112.0,
+      410.0,
+      341.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/27192113557186715-BROTHER.png",
+    "hands": [
+      [
+        346.0,
+        239.0,
+        474.0,
+        404.0
+      ],
+      [
+        368.0,
+        374.0,
+        466.0,
+        480.0
+      ]
+    ],
+    "head": [
+      275.0,
+      31.0,
+      451.0,
+      256.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/782941320203238-WHEN.png",
+    "hands": [
+      [
+        260.0,
+        294.0,
+        409.0,
+        434.0
+      ],
+      [
+        416.0,
+        268.0,
+        524.0,
+        480.0
+      ]
+    ],
+    "head": [
+      299.0,
+      82.0,
+      474.0,
+      302.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/7571787384084172-BANANA.png",
+    "hands": [
+      [
+        138.0,
+        279.0,
+        290.0,
+        391.0
+      ],
+      [
+        268.0,
+        311.0,
+        423.0,
+        401.0
+      ]
+    ],
+    "head": [
+      260.0,
+      16.0,
+      421.0,
+      253.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/3078108961994581-BANANA.png",
+    "hands": [
+      [
+        206.0,
+        309.0,
+        316.0,
+        480.0
+      ],
+      [
+        284.0,
+        237.0,
+        414.0,
+        431.0
+      ]
+    ],
+    "head": [
+      225.0,
+      6.0,
+      390.0,
+      264.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/15285022069644705-BREAD.png",
+    "hands": [
+      [
+        210.0,
+        332.0,
+        441.0,
+        480.0
+      ],
+      [
+        334.0,
+        262.0,
+        580.0,
+        383.0
+      ]
+    ],
+    "head": [
+      220.0,
+      0.0,
+      431.0,
+      274.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/1444025710176855-HOT.png",
+    "hands": [
+      [
+        189.0,
+        176.0,
+        415.0,
+        333.0
+      ]
+    ],
+    "head": [
+      245.0,
+      22.0,
+      414.0,
+      221.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/3790665114648748-CHILD.png",
+    "hands": [
+      [
+        30.0,
+        316.0,
+        183.0,
+        454.0
+      ]
+    ],
+    "head": [
+      281.0,
+      77.0,
+      450.0,
+      286.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/14991994807763365-WANT 2.png",
+    "hands": [
+      [
+        71.0,
+        238.0,
+        260.0,
+        453.0
+      ],
+      [
+        344.0,
+        286.0,
+        578.0,
+        480.0
+      ]
+    ],
+    "head": [
+      205.0,
+      1.0,
+      395.0,
+      297.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/8504478926730117-WHICH.png",
+    "hands": [
+      [
+        178.0,
+        229.0,
+        275.0,
+        396.0
+      ],
+      [
+        344.0,
+        248.0,
+        438.0,
+        411.0
+      ]
+    ],
+    "head": [
+      233.0,
+      29.0,
+      401.0,
+      264.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/9116126321060016-FINISH.png",
+    "hands": [
+      [
+        65.0,
+        157.0,
+        276.0,
+        408.0
+      ],
+      [
+        465.0,
+        153.0,
+        611.0,
+        378.0
+      ]
+    ],
+    "head": [
+      285.0,
+      32.0,
+      451.0,
+      269.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/52182646297618-TOMORROW.png",
+    "hands": [],
+    "head": [
+      241.0,
+      0.0,
+      435.0,
+      282.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/08927917820114639-WEEK.png",
+    "hands": [
+      [
+        145.0,
+        264.0,
+        330.0,
+        433.0
+      ]
+    ],
+    "head": [
+      261.0,
+      51.0,
+      418.0,
+      259.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/6017424580561013-TIME.png",
+    "hands": [
+      [
+        259.0,
+        273.0,
+        430.0,
+        356.0
+      ],
+      [
+        380.0,
+        339.0,
+        495.0,
+        463.0
+      ]
+    ],
+    "head": [
+      238.0,
+      29.0,
+      398.0,
+      238.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/11225598264242453-HELLO.png",
+    "hands": [
+      [
+        158.0,
+        11.0,
+        260.0,
+        221.0
+      ]
+    ],
+    "head": [
+      259.0,
+      39.0,
+      473.0,
+      276.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/899168979995945-WELCOME 2.png",
+    "hands": [
+      [
+        384.0,
+        421.0,
+        600.0,
+        540.0
+      ]
+    ],
+    "head": [
+      401.0,
+      5.0,
+      613.0,
+      278.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/001531801362371743-YELLOW.png",
+    "hands": [
+      [
+        158.0,
+        174.0,
+        270.0,
+        306.0
+      ]
+    ],
+    "head": [
+      289.0,
+      91.0,
+      425.0,
+      277.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/5654281824131167-TODAY.png",
+    "hands": [
+      [
+        44.0,
+        194.0,
+        238.0,
+        378.0
+      ],
+      [
+        359.0,
+        189.0,
+        561.0,
+        358.0
+      ]
+    ],
+    "head": [
+      230.0,
+      17.0,
+      391.0,
+      262.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/2983145121028361-ANGRY.png",
+    "hands": [
+      [
+        105.0,
+        181.0,
+        243.0,
+        372.0
+      ],
+      [
+        419.0,
+        202.0,
+        594.0,
+        386.0
+      ]
+    ],
+    "head": [
+      248.0,
+      52.0,
+      435.0,
+      259.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/9445390940586698-WOMAN.png",
+    "hands": [
+      [
+        238.0,
+        332.0,
+        436.0,
+        467.0
+      ]
+    ],
+    "head": [
+      208.0,
+      44.0,
+      415.0,
+      288.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/06960268077531429-DOG.png",
+    "hands": [
+      [
+        139.0,
+        238.0,
+        275.0,
+        412.0
+      ]
+    ],
+    "head": [
+      310.0,
+      7.0,
+      503.0,
+      323.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/874759887268578-SISTER.png",
+    "hands": [
+      [
+        324.0,
+        249.0,
+        454.0,
+        392.0
+      ],
+      [
+        289.0,
+        393.0,
+        465.0,
+        480.0
+      ]
+    ],
+    "head": [
+      254.0,
+      33.0,
+      416.0,
+      233.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/7616988400005291-HELP.png",
+    "hands": [
+      [
+        326.0,
+        169.0,
+        448.0,
+        296.0
+      ],
+      [
+        265.0,
+        278.0,
+        456.0,
+        408.0
+      ]
+    ],
+    "head": [
+      201.0,
+      13.0,
+      373.0,
+      207.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/7666802297995068-HOW.png",
+    "hands": [
+      [
+        204.0,
+        243.0,
+        303.0,
+        386.0
+      ],
+      [
+        313.0,
+        254.0,
+        420.0,
+        408.0
+      ]
+    ],
+    "head": [
+      233.0,
+      4.0,
+      411.0,
+      276.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/25802117645943423-HELLO.png",
+    "hands": [
+      [
+        345.0,
+        62.0,
+        539.0,
+        313.0
+      ]
+    ],
+    "head": [
+      139.0,
+      14.0,
+      368.0,
+      304.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/7910128481289247-EAT.png",
+    "hands": [
+      [
+        336.0,
+        338.0,
+        516.0,
+        540.0
+      ]
+    ],
+    "head": [
+      388.0,
+      8.0,
+      572.0,
+      265.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/17777316675017052-DOG.png",
+    "hands": [
+      [
+        374.0,
+        151.0,
+        496.0,
+        323.0
+      ]
+    ],
+    "head": [
+      179.0,
+      38.0,
+      385.0,
+      313.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/021939327153324584-HOW.png",
+    "hands": [
+      [
+        161.0,
+        288.0,
+        296.0,
+        441.0
+      ],
+      [
+        324.0,
+        287.0,
+        473.0,
+        442.0
+      ]
+    ],
+    "head": [
+      231.0,
+      31.0,
+      404.0,
+      272.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/2976678151413328-CHILD.png",
+    "hands": [],
+    "head": [
+      261.0,
+      39.0,
+      456.0,
+      262.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/8703356571785683-PAPER.png",
+    "hands": [
+      [
+        271.0,
+        292.0,
+        440.0,
+        394.0
+      ],
+      [
+        281.0,
+        409.0,
+        455.0,
+        473.0
+      ]
+    ],
+    "head": [
+      241.0,
+      28.0,
+      414.0,
+      232.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/2771819427724249-BOY.png",
+    "hands": [
+      [
+        118.0,
+        139.0,
+        276.0,
+        278.0
+      ]
+    ],
+    "head": [
+      281.0,
+      57.0,
+      445.0,
+      306.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/6120779668634364-PAPER.png",
+    "hands": [
+      [
+        273.0,
+        217.0,
+        411.0,
+        368.0
+      ],
+      [
+        303.0,
+        384.0,
+        435.0,
+        480.0
+      ]
+    ],
+    "head": [
+      254.0,
+      37.0,
+      400.0,
+      217.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/22439761758779864-COW.png",
+    "hands": [
+      [
+        371.0,
+        2.0,
+        516.0,
+        173.0
+      ]
+    ],
+    "head": [
+      206.0,
+      31.0,
+      399.0,
+      303.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/7199140986089654-YES.png",
+    "hands": [
+      [
+        199.0,
+        223.0,
+        336.0,
+        359.0
+      ]
+    ],
+    "head": [
+      290.0,
+      14.0,
+      475.0,
+      248.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/7819362494402429-GO.png",
+    "hands": [
+      [
+        65.0,
+        207.0,
+        160.0,
+        312.0
+      ],
+      [
+        229.0,
+        297.0,
+        338.0,
+        402.0
+      ]
+    ],
+    "head": [
+      279.0,
+      16.0,
+      436.0,
+      232.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/3775027040220682-seedBIRD.png",
+    "hands": [
+      [
+        221.0,
+        212.0,
+        349.0,
+        322.0
+      ]
+    ],
+    "head": [
+      276.0,
+      23.0,
+      433.0,
+      229.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/4145721132021538-PENCIL.png",
+    "hands": [
+      [
+        158.0,
+        307.0,
+        385.0,
+        436.0
+      ],
+      [
+        448.0,
+        269.0,
+        590.0,
+        398.0
+      ]
+    ],
+    "head": [
+      200.0,
+      43.0,
+      386.0,
+      292.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/3722707446891771-PAPER.png",
+    "hands": [
+      [
+        116.0,
+        264.0,
+        363.0,
+        444.0
+      ],
+      [
+        360.0,
+        219.0,
+        524.0,
+        391.0
+      ]
+    ],
+    "head": [
+      226.0,
+      87.0,
+      409.0,
+      283.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/8370733641565598-HOW.png",
+    "hands": [
+      [
+        279.0,
+        286.0,
+        506.0,
+        520.0
+      ],
+      [
+        519.0,
+        293.0,
+        718.0,
+        540.0
+      ]
+    ],
+    "head": [
+      366.0,
+      1.0,
+      598.0,
+      275.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/8347150757772597-MILK.png",
+    "hands": [],
+    "head": [
+      288.0,
+      37.0,
+      464.0,
+      261.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/49288220098651747-DOG.png",
+    "hands": [
+      [
+        66.0,
+        234.0,
+        195.0,
+        422.0
+      ]
+    ],
+    "head": [
+      209.0,
+      94.0,
+      395.0,
+      329.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/8720863130422172-WELCOME 2.png",
+    "hands": [],
+    "head": [
+      245.0,
+      6.0,
+      436.0,
+      229.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/9692739680851399-PINK.png",
+    "hands": [
+      [
+        164.0,
+        214.0,
+        280.0,
+        369.0
+      ]
+    ],
+    "head": [
+      233.0,
+      8.0,
+      420.0,
+      204.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/7404223141679687-WHERE.png",
+    "hands": [
+      [
+        363.0,
+        249.0,
+        529.0,
+        479.0
+      ]
+    ],
+    "head": [
+      171.0,
+      4.0,
+      376.0,
+      261.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/2716275040253322-COOK.png",
+    "hands": [
+      [
+        276.0,
+        284.0,
+        464.0,
+        439.0
+      ]
+    ],
+    "head": [
+      256.0,
+      21.0,
+      423.0,
+      258.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/5243653012534697-BLUE.png",
+    "hands": [],
+    "head": [
+      264.0,
+      11.0,
+      463.0,
+      251.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/2475683909646651-BIRD.png",
+    "hands": [
+      [
+        286.0,
+        151.0,
+        426.0,
+        312.0
+      ]
+    ],
+    "head": [
+      191.0,
+      48.0,
+      383.0,
+      291.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/1789715889624135-HELLO.png",
+    "hands": [
+      [
+        409.0,
+        122.0,
+        520.0,
+        318.0
+      ]
+    ],
+    "head": [
+      248.0,
+      114.0,
+      385.0,
+      357.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/6102529420840566-LEARN.png",
+    "hands": [
+      [
+        166.0,
+        287.0,
+        283.0,
+        434.0
+      ],
+      [
+        363.0,
+        431.0,
+        451.0,
+        480.0
+      ]
+    ],
+    "head": [
+      269.0,
+      64.0,
+      430.0,
+      263.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/7973429116215278-NO.png",
+    "hands": [],
+    "head": [
+      330.0,
+      32.0,
+      523.0,
+      248.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/5638862044022404-WELCOME 2.png",
+    "hands": [
+      [
+        340.0,
+        228.0,
+        541.0,
+        418.0
+      ]
+    ],
+    "head": [
+      208.0,
+      3.0,
+      376.0,
+      268.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/07732970042675213-HAPPY.png",
+    "hands": [
+      [
+        179.0,
+        253.0,
+        425.0,
+        424.0
+      ]
+    ],
+    "head": [
+      176.0,
+      1.0,
+      370.0,
+      237.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/6582339087224742-CAT.png",
+    "hands": [
+      [
+        129.0,
+        132.0,
+        276.0,
+        311.0
+      ]
+    ],
+    "head": [
+      230.0,
+      2.0,
+      433.0,
+      242.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/531692335723785-WHAT 2.png",
+    "hands": [
+      [
+        180.0,
+        317.0,
+        415.0,
+        447.0
+      ],
+      [
+        444.0,
+        192.0,
+        545.0,
+        376.0
+      ]
+    ],
+    "head": [
+      196.0,
+      38.0,
+      374.0,
+      261.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/9009854854743657-YES.png",
+    "hands": [
+      [
+        156.0,
+        252.0,
+        278.0,
+        367.0
+      ]
+    ],
+    "head": [
+      260.0,
+      83.0,
+      429.0,
+      264.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/9220637121525757-SORRY.png",
+    "hands": [
+      [
+        276.0,
+        341.0,
+        374.0,
+        437.0
+      ]
+    ],
+    "head": [
+      228.0,
+      14.0,
+      434.0,
+      246.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/010737991316382534-ORANGE.png",
+    "hands": [
+      [
+        271.0,
+        208.0,
+        393.0,
+        336.0
+      ]
+    ],
+    "head": [
+      243.0,
+      49.0,
+      470.0,
+      281.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/6234298185670768-CHILD.png",
+    "hands": [
+      [
+        386.0,
+        297.0,
+        550.0,
+        443.0
+      ]
+    ],
+    "head": [
+      185.0,
+      7.0,
+      381.0,
+      239.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/5949494391929417-NAME.png",
+    "hands": [
+      [
+        130.0,
+        279.0,
+        264.0,
+        408.0
+      ],
+      [
+        320.0,
+        314.0,
+        436.0,
+        439.0
+      ]
+    ],
+    "head": [
+      248.0,
+      98.0,
+      389.0,
+      277.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/18053723532999788-PLEASE.png",
+    "hands": [],
+    "head": [
+      246.0,
+      21.0,
+      414.0,
+      243.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/6009435442583633-GREEN.png",
+    "hands": [
+      [
+        218.0,
+        184.0,
+        341.0,
+        297.0
+      ]
+    ],
+    "head": [
+      300.0,
+      14.0,
+      486.0,
+      231.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/6445699135022072-HOW.png",
+    "hands": [
+      [
+        229.0,
+        248.0,
+        379.0,
+        383.0
+      ],
+      [
+        398.0,
+        233.0,
+        545.0,
+        382.0
+      ]
+    ],
+    "head": [
+      284.0,
+      19.0,
+      443.0,
+      244.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/06754700554069304-CHILD.png",
+    "hands": [
+      [
+        79.0,
+        198.0,
+        290.0,
+        406.0
+      ]
+    ],
+    "head": [
+      271.0,
+      16.0,
+      484.0,
+      297.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/7541924892936593-SMALL.png",
+    "hands": [
+      [
+        218.0,
+        228.0,
+        301.0,
+        403.0
+      ],
+      [
+        360.0,
+        227.0,
+        443.0,
+        423.0
+      ]
+    ],
+    "head": [
+      236.0,
+      57.0,
+      408.0,
+      284.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/18521627111046346-WHO.png",
+    "hands": [
+      [
+        260.0,
+        259.0,
+        389.0,
+        393.0
+      ]
+    ],
+    "head": [
+      188.0,
+      23.0,
+      436.0,
+      286.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/8615822021106332-DOG.png",
+    "hands": [
+      [
+        195.0,
+        189.0,
+        346.0,
+        427.0
+      ]
+    ],
+    "head": [
+      328.0,
+      2.0,
+      518.0,
+      228.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/5788460385097332-WHO.png",
+    "hands": [
+      [
+        245.0,
+        193.0,
+        370.0,
+        328.0
+      ]
+    ],
+    "head": [
+      265.0,
+      2.0,
+      444.0,
+      227.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/1529448369800237-EAT.png",
+    "hands": [
+      [
+        314.0,
+        168.0,
+        445.0,
+        372.0
+      ]
+    ],
+    "head": [
+      210.0,
+      11.0,
+      430.0,
+      233.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/15754416849640696-DOOR.png",
+    "hands": [
+      [
+        140.0,
+        167.0,
+        249.0,
+        376.0
+      ],
+      [
+        314.0,
+        186.0,
+        430.0,
+        384.0
+      ]
+    ],
+    "head": [
+      253.0,
+      12.0,
+      426.0,
+      244.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/5348552177745745-PLAY.png",
+    "hands": [
+      [
+        300.0,
+        228.0,
+        480.0,
+        355.0
+      ],
+      [
+        544.0,
+        230.0,
+        683.0,
+        397.0
+      ]
+    ],
+    "head": [
+      401.0,
+      3.0,
+      572.0,
+      254.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/5372668319999747-NO.png",
+    "hands": [
+      [
+        366.0,
+        221.0,
+        600.0,
+        356.0
+      ]
+    ],
+    "head": [
+      198.0,
+      57.0,
+      385.0,
+      279.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/394147254494269-NIGHT.png",
+    "hands": [],
+    "head": [
+      278.0,
+      36.0,
+      441.0,
+      274.0
+    ],
+    "keypoints": null
+  },
+  {
+    "image": "artifacts/audit/frames/7179499364614612-WORK.png",
+    "hands": [
+      [
+        119.0,
+        286.0,
+        265.0,
+        379.0
+      ],
+      [
+        94.0,
+        383.0,
+        304.0,
+        471.0
+      ]
+    ],
+    "head": [
+      263.0,
+      16.0,
+      429.0,
+      231.0
+    ],
+    "keypoints": null
+  }
+]

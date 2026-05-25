@@ -1,0 +1,38 @@
+# Detector training configuration — Colab variant (shrunk dataset)
+# Uses pre-shrunk images (max_side=256) for fast upload (~1 GB total).
+# data_root is passed via --data-root /content/data/detect_small in the notebook.
+
+data_root:        data/detect_small
+train_manifest:   artifacts/detect/train_small.json
+val_manifest:     artifacts/detect/val_small.json
+
+# Normalisation (ImageNet RGB mean/std — standard for mixed detection datasets)
+norm:
+  mean: [0.485, 0.456, 0.406]
+  std:  [0.229, 0.224, 0.225]
+
+# Model
+# img 192 (was 128): 1.5× resolution → 12×12 grid (432 anchors); anchor scales
+# auto-derive to 48/96/144 via anchors.scales_for. width 256 (was 192) adds
+# capacity. Both levers chosen to clear the hand detection-rate gate.
+img:       192
+n_anchors: 3
+width:     256
+
+# Optimisation
+lr:                3.0e-3
+weight_decay:      0.02
+epochs:            60
+batch_size:        64
+warmup_epochs:     3
+early_stop_patience: 12
+seed:              1337
+
+# DataLoader workers (T4 Colab recommends <=2 to avoid "suggested 2" warning)
+num_workers:       2
+
+# Validation: cap at 1500 images for speed (full val = 12575 images)
+val_max_images:    1500
+
+# Output
+out_dir:           artifacts/checkpoints/detector
