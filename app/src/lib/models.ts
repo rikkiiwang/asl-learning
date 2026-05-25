@@ -13,6 +13,10 @@ export interface ModelOption {
   label: string;
   kind: ModelKind;
   note: string;
+  /** Short held-out scoreboard, shown in the picker. */
+  stats?: string;
+  /** Experimental models run but aren't the recommended/shipped recognizer. */
+  experimental?: boolean;
 }
 
 export const MODELS: ModelOption[] = [
@@ -20,13 +24,16 @@ export const MODELS: ModelOption[] = [
     id: 'own-v1',
     label: 'My model v1 (from scratch)',
     kind: 'own',
-    note: 'From-scratch pilot recognizer — version 1.',
+    note: 'Shipped recognizer: an end-to-end RGB CNN with a 1500-gloss pretrained encoder.',
+    stats: '73% top-1 · 86% top-3 (held-out)',
   },
   {
     id: 'own-v2',
-    label: 'My model v2 (from scratch)',
+    label: 'My model v2 (experimental)',
     kind: 'own',
-    note: 'From-scratch pilot recognizer — version 2.',
+    experimental: true,
+    note: 'From-scratch 3-stage landmark-geometry pipeline (detector → keypoints → recognizer). Runs live in your browser; lower accuracy than v1.',
+    stats: '48% top-1 · 69% top-3 (held-out)',
   },
   {
     id: 'baseline',

@@ -4,7 +4,9 @@ import { useCamera } from '../camera/useCamera';
 import { sampleMeanLuminance } from '../camera/sampleLuminance';
 import { assessBrightness, type BrightnessStatus } from '../lib/camera';
 import { recordClip } from '../capture/recordClip';
+import { recordRawClip } from '../capture/recordRawClip';
 import { framesToTensor } from '../lib/clipTensor';
+import { getV2Recognizer } from '../inference/v2/pipeline';
 import { softmax, topK } from '../lib/inference';
 import { decidePassFail, type Decision } from '../lib/decision';
 import { buildHint } from '../lib/hints';
@@ -157,13 +159,21 @@ export function PracticePage() {
 
     setStep('recording');
     recordedOnceRef.current = true; // enable preview re-bind on subsequent attempts
-    const clip = await recordClip(videoRef.current, { durationMs: 3000 });
-
-    setStep('predicting');
     try {
-      const tensor = framesToTensor(clip.frames, clip.size, norm.mean, norm.std);
-      const recognizer = createRecognizer(selected, byClassIndex.size || 75);
-      const probs = softmax(await recognizer.recognize(tensor));
+      // v2 ("Constellation") is a 3-stage landmark pipeline that needs the raw
+      // frames (it detects the hands itself); v1 uses the ROI-cropped 112 tensor.
+      let probs: Float32Array | number[];
+      if (selected.id === 'own-v2') {
+        const { frames, work } = await recordRawClip(videoRef.current, { durationMs: 3000 });
+        setStep('predicting');
+        probs = softmax(await getV2Recognizer().recognizeFrames(frames, work));
+      } else {
+        const clip = await recordClip(videoRef.current, { durationMs: 3000 });
+        setStep('predicting');
+        const tensor = framesToTensor(clip.frames, clip.size, norm.mean, norm.std);
+        const recognizer = createRecognizer(selected, byClassIndex.size || 75);
+        probs = softmax(await recognizer.recognize(tensor));
+      }
 
       const promptIndex = current.model_class_index;
       const decision = decidePassFail(probs, promptIndex);

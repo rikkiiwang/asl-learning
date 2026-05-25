@@ -591,6 +591,43 @@ md("""## Decisions log — the whole journey
     3-seed) — noisy front-end geometry adds label noise. More data only helps when its
     geometry is trustworthy.
 """),
+
+md(f"""---
+## Final verdict — v2 vs. the shipped v1
+
+This story opened against v1 **as it stood when v2 began: ~18 % test**, a tiny
+end-to-end CNN that had plateaued. v2 was the bet that **geometry beats pixels**,
+and on that original baseline it paid off handsomely: **18 % → {rg_test:.1%} test**
+(val {rg_val:.1%}, top-3 ≈ 69 %), entirely from scratch.
+
+**But v1 did not stand still.** In parallel, v1 found its own lever — **data**,
+not architecture: pretraining its frame encoder on a far larger gloss set
+(500 → 1500 glosses, signer-held-out) before fine-tuning on the 75-sign head.
+That single change took v1 from 18 % to a **shipped 73.3 % top-1 / 85.7 % top-3 /
+90.2 % top-5**. So the honest, like-for-like standing today is:
+
+| model | approach | test top-1 | test top-3 | status |
+|---|---|---|---|---|
+| **v1 (shipped)** | end-to-end RGB CNN, **encoder pretrained on 1500 glosses** | **73.3 %** | **85.7 %** | **production — live in the app** |
+| v2 · Constellation | from-scratch 3-stage **landmark-geometry** pipeline | {rg_test:.1%} | ≈ 69 % | experimental alternative (selectable in the app) |
+
+**v2 did not surpass the shipped v1, and we report that plainly.** Both honored
+the same hard constraint (no pretrained weights), so the comparison is fair. What
+the two journeys together show is *which lever mattered most on this problem*: on a
+thin, signer-held-out dataset, **scaling clean training data through pretraining
+(v1) bought more accuracy than changing the input representation (v2)** — even
+though the geometry thesis is sound and demonstrably cured v1's *original*
+appearance-overfitting.
+
+**Why v2 is still kept, not discarded.** Its ceiling here is set by **front-end
+geometry quality on thin data** (Decisions F & 11), not by the thesis: every gain
+came from cleaner geometry or cleaner data, and every regression came from noisier
+inputs (COCO domain shift, raw-YouTube MS-ASL). That is a *data/front-end* ceiling
+with a clear, un-spent runway — a stronger detector/landmark and a confidence-
+filtered corpus are the obvious next pushes. So v2 ships as a documented,
+**selectable "experimental" model** beside v1: v1 is what the demo runs on today,
+v2 is the from-scratch geometry line that's most promising to revisit.
+"""),
 ]
 
 nb = nbf.v4.new_notebook(cells=cells)

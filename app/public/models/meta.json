@@ -699,5 +699,5 @@
       "gloss": "YES"
     }
   },
-  "notes": "thresholds are placeholders until Phase 4 calibration"
+  "notes": "thresholds intentionally inert — pass policy is top-3 membership (decision.ts passTopN=3, gating off by design); calibration descoped"
 }

@@ -1,0 +1,59 @@
+{
+  "contract": "3 separate ONNX models; geometry glue ported to TS",
+  "detector": {
+    "width": 256,
+    "n_anchors": 3,
+    "n_classes": 2,
+    "img": 192,
+    "stride": 16,
+    "score_thr": 0.3,
+    "iou_thr": 0.45,
+    "norm": {
+      "mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "std": [
+        0.229,
+        0.224,
+        0.225
+      ]
+    }
+  },
+  "landmark": {
+    "width": 64,
+    "crop_size": 64,
+    "frame_scale": 2.0,
+    "norm": {
+      "mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "std": [
+        0.229,
+        0.224,
+        0.225
+      ]
+    }
+  },
+  "recognizer": {
+    "emb": 192,
+    "head": "transformer",
+    "use_velocity": true,
+    "geom_dim": 93,
+    "n_classes": 75,
+    "frames": 16
+  },
+  "bytes": {
+    "detector.onnx": 4087206,
+    "recognizer.onnx": 1627173,
+    "landmark.onnx": 774746
+  },
+  "ort_roundtrip": {
+    "detector": true,
+    "landmark": true,
+    "recognizer": true
+  }
+}

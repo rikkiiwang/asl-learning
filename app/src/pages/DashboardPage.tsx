@@ -9,7 +9,6 @@ import type { ProgressSummary, Sign, SignMastery } from '../lib/types';
 import { ModelSwitcher } from '../components/ModelSwitcher';
 import { StreakPill } from '../components/StreakPill';
 import { DailyGoalCard } from '../components/DailyGoalCard';
-import { devToolsEnabled } from '../lib/devTools';
 
 interface RecentItem {
   label: string;
@@ -86,7 +85,7 @@ export function DashboardPage() {
 
           <RecentHistory items={recent} />
 
-          {devToolsEnabled() && <ModelSwitcher />}
+          <ModelSwitcher />
         </>
       )}
     </main>
