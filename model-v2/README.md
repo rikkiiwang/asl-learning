@@ -25,6 +25,36 @@ learns the hands (Risk 3 in `../vision-model-plan.md`). Constellation redirects
 capacity onto the hands and hands the "location/movement" parameters to the model
 as explicit geometry.
 
+## Current status & results
+
+All from scratch, zero pretrained weights. val/test are **signer-held-out** and stay
+pure ASL Citizen, so every number compares directly to v1 (18% test).
+
+| stage | model | status | key metric (real ASL) |
+|---|---|---|---|
+| 1 · detector | hand+head SSD (img 192, w256) | ✅ validated | head-anchor **0.838** · hand **0.636** (ASL-audit gate) |
+| 1.5 · landmark | 21-kpt regressor (FreiHAND) | ✅ validated | PCK@0.1 **0.840** (strict gate) |
+| 2 · recognizer | RecognizerA (geometry + velocity + transformer) | ✅ trained | **test 47.9%** / val 49.8% / top-3 ≈ 69% |
+
+**The climb (recognizer):** v1 18% → geometry 37.6% → +aug/velocity/transformer
+45.1% → +WLASL **47.9%** test. The jump from pixels to head-normalized geometry is
+what cures v1's appearance-overfitting.
+
+**Experiments resolved (not promoted):** COCO-WholeBody front-end retrains (Plan 6)
+were run and measured. Detector +COCO lifted hand recall (0.636→0.671) but regressed
+the head anchor below gate (0.838→0.575, faces became implicit negatives) →
+disqualified. Landmark +COCO was a wash (PCK 0.840→0.826). **Validated base detector
++ FreiHAND-only landmark stay in production**; candidates kept under
+`artifacts/checkpoints/*_coco/`.
+
+**In progress:** MS-ASL data expansion (74/75 signs matched, ~doubles train, same
+modality as WLASL). Adapter + Colab pipeline are ready
+(`scripts/build_msasl_subset.py`, `notebooks/train_recognizer_colab.ipynb`); bar to
+beat is test 47.9% / top-3 69%.
+
+**Full decision journey:** `notebooks/model_v2_story.ipynb` (rebuild with
+`.venv/bin/python notebooks/build_v2_story.py`).
+
 ## Design source of truth
 
 `../docs/superpowers/specs/2026-05-22-constellation-v2-model-design.md`

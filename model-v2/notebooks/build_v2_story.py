@@ -38,6 +38,15 @@ RG = json.loads((ROOT / "artifacts/checkpoints/recog_a/history.json").read_text(
 rg_hist = RG["history"]
 
 
+def _maybe(rel):
+    fp = ROOT / rel
+    return json.loads(fp.read_text()) if fp.exists() else None
+
+
+# Plan 6 COCO candidate detector — the disqualified retrain (kept for the record)
+COCO_DET = _maybe("artifacts/checkpoints/detector_coco/audit_eval.json")
+
+
 # ---------------------------------------------------------------------------
 # Training-curve figure (the validated w256/192² retrain)
 # ---------------------------------------------------------------------------
@@ -157,6 +166,10 @@ lm_p01 = LM["best_score"]; lm_p02 = lm_best["pck_02"]; lm_err = lm_best["mean_er
 
 # recognizer live numbers
 rg_val = RG["best_val_top1"]; rg_test = RG["test_top1"]; rg_best_ep = RG["best_epoch"]
+
+# Plan 6 COCO detector candidate (disqualified): hand up, head anchor down
+cd_hand = COCO_DET["hand_dr"] if COCO_DET else 0.671
+cd_head = COCO_DET["head_anchor_dr"] if COCO_DET else 0.575
 
 cells = [
 md("""# Constellation v2 — Model Story · Part 1: the Detector (Stage 1)
@@ -470,31 +483,69 @@ print(f"test top-1 : {r['test_top1']:.3f}   (vs v1's 0.180 end-to-end)")
 """),
 
 md(f"""---
-# Part 4 · What's running now — cross-dataset front-end retrains (Plan 6)
+# Part 4 · Plan 6 result — COCO-WholeBody front-end retrains (resolved: **not promoted**)
 
-Decision F points at the front-end, so the detector and landmark models are being
-**retrained in parallel** with **COCO-WholeBody** added — in-the-wild hands with
-both boxes (for the detector) and 21 keypoints (for the landmark model). ASL
-Citizen on its own is studio-clean; COCO adds the messy real-world hands the live
-app actually sees.
+Decision F pointed at the front-end, so the detector and landmark were retrained
+with **COCO-WholeBody** added (in-the-wild hands: boxes for the detector, 21
+keypoints for the landmark). The hypothesis: messier real-world hands generalize to
+the live app better than studio-clean ASL Citizen / tidy FreiHAND. COCO went to
+**train only**; val/test stayed pure so the numbers stay comparable.
 
-**Why this, why now:**
-- The recognizer's accuracy is capped by the **quality of the geometry** it's fed.
-  Cleaner hand boxes + landmarks that generalize off-FreiHAND should lift it.
-- COCO is added to **train only**; **val/test stay pure** (FreiHAND val · ASL-audit
-  gate) so the new numbers are directly comparable to everything above.
+**Both retrains were evaluated honestly — and neither earned promotion.**
 
-**How we'll judge each — not on the in-domain metric:**
-- **Landmark:** FreiHAND-val PCK@0.1 should land ≈ 0.84 (unchanged — COCO is ~15 %
-  of train). The real test is **re-rendering the ASL audit frames**: do the
-  keypoints track real ASL open/flat hands *better*?
-- **Detector:** re-run the **ASL-audit gate** (head-anchor ≥ 0.80, hand ≥ 0.60) to
-  confirm **no regression**, and watch whether COCO hands push **hand recall past
-  the current {hd:.3f}**.
-- **Recognizer:** **re-cache** ASL Citizen + WLASL through the improved front-end
-  and retrain (3 seeds). The bar to beat is **test {rg_test:.1%} / top-3 ≈ 69 %**.
+| stage | hypothesis | measured outcome | verdict |
+|---|---|---|---|
+| **Landmark** (+COCO) | better real-ASL keypoints | FreiHAND-val PCK@0.1 **0.840 → 0.826**; ASL audit frames **near-identical** (70-frame A/B) | ❌ wash — kept FreiHAND-only |
+| **Detector** (+COCO) | higher hand recall | hand **{hd:.3f} → {cd_hand:.3f}** ✅ **but** head-anchor **{ha:.3f} → {cd_head:.3f}** ❌ (below 0.80 gate) | ❌ disqualified — kept base |
 
-This part stays open until both retrains land and the head-to-head is run.
+**Why the detector broke (and why it's instructive).** The hand gain was *real* —
+COCO hands work. But the merge added COCO images with **hand-only labels**, so the
+**faces in those images became implicit negatives** → head confidence collapsed.
+The head box is the **normalization anchor for all geometry**, so a head that's
+wrong ~42 % of the time corrupts the recognizer's input — disqualifying regardless
+of the hand gain. Both candidates are preserved (`*_coco/`) but the **validated
+base detector + FreiHAND-only landmark stay in production.**
+
+**The lesson:** cross-dataset transfer needs a **matching modality**. WLASL helped
+(it's ASL signing video); COCO-WholeBody didn't (different domain). The fixable
+path — label COCO **faces** as the `head` class too — is noted as Plan 6.1.
+"""),
+
+code("""# Reproduce the disqualifying detector regression (saved COCO candidate eval)
+import json, os
+p = "../artifacts/checkpoints/detector_coco/audit_eval.json"
+if os.path.exists(p):
+    c = json.load(open(p))
+    b = json.load(open("../artifacts/checkpoints/detector/audit_eval.json"))
+    print(f"hand dr      base {b['hand_dr']:.3f} -> COCO {c['hand_dr']:.3f}   (gain, real)")
+    print(f"head anchor  base {b['head_anchor_dr']:.3f} -> COCO {c['head_anchor_dr']:.3f}   "
+          f"(gate 0.80 -> {'PASS' if c['head_anchor_dr']>=0.8 else 'FAIL'})")
+else:
+    print("COCO candidate eval not present in this checkout")
+"""),
+
+md(f"""---
+# Part 5 · Pushing data further — MS-ASL (in progress)
+
+With the front-end levers exhausted, the remaining ceiling is **data, not model
+capacity**. The evidence is direct: **+WLASL gave +2.8 pts with zero model changes**,
+while bigger models stayed inside the ±5-pt noise on this thin, signer-held-out
+data — more parameters would overfit, not help.
+
+So the next push is a second ASL corpus: **MS-ASL**.
+
+- **74/75** of our signs are in MS-ASL — **~3,690 instances**, roughly **doubling**
+  the training set (ASL Citizen 2,362 + WLASL 647).
+- **Same modality as WLASL** (isolated ASL signing video) — the property COCO
+  lacked, so transfer should actually work this time.
+- **Train-only**, val/test stay pure ASL Citizen signer-held-out → the result stays
+  directly comparable to **test {rg_test:.1%} / top-3 ≈ 69 %**, the bar to beat.
+
+The pipeline is built and running on Colab: a gloss-matched yt-dlp adapter
+(`build_msasl_subset.py`) → cache geometry through the **same validated front-end** →
+train RecognizerA (3 seeds). Expected realistically **+2–4 pts** after YouTube
+link-rot, not a guarantee. **Result pending** — this section closes when the 3-seed
+mean lands.
 """),
 
 md("""## Decisions log — the whole journey
@@ -517,8 +568,13 @@ md("""## Decisions log — the whole journey
    transformer head, and a second corpus (WLASL).
 8. **Report honest numbers.** ±5-pt single-run noise → 3-seed means; val/test kept
    pure when adding train-only corpora; tweaks inside the noise band not claimed.
-9. **Chase the current bottleneck.** Geometry+data tapped out on these splits →
-   improve the front-end (COCO-WholeBody retrains, in progress).
+9. **Kill experiments that don't earn promotion.** COCO-WholeBody retrains were run,
+   measured, and **dropped** — the detector's hand gain didn't justify its head-anchor
+   regression; the landmark was a wash. Validated front-end stays.
+10. **Cross-dataset transfer needs a matching modality.** WLASL (ASL signing video)
+    helped; COCO-WholeBody (different domain) didn't — same lesson, both directions.
+11. **On thin data, scale data not parameters.** +WLASL gave a real +2.8 pts; bigger
+    models stayed inside the noise. Next lever is MS-ASL (more data), not more params.
 """),
 ]
 
