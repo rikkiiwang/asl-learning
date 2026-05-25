@@ -65,12 +65,28 @@ export function PracticePage() {
   const [result, setResult] = useState<AttemptResult | null>(null);
   const [stats, setStats] = useState({ completed: 0, passed: 0 });
   const [finishInfo, setFinishInfo] = useState({ streak: 0, goalClosed: false });
+  // Normalization for the real model; loaded from meta.json (falls back to the
+  // placeholder for the stub recognizer, which ignores exact values).
+  const [norm, setNorm] = useState<{ mean: number[]; std: number[] }>(() => ({
+    mean: [...PLACEHOLDER_NORM.mean],
+    std: [...PLACEHOLDER_NORM.std],
+  }));
 
   const current = deck[deckIndex] ?? null;
 
   useEffect(() => {
     void start();
   }, [start]);
+
+  // Load the model's mean/std so the input tensor matches training.
+  useEffect(() => {
+    void fetch('/models/meta.json')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((m) => {
+        if (m?.input?.mean && m?.input?.std) setNorm({ mean: m.input.mean, std: m.input.std });
+      })
+      .catch(() => {/* keep placeholder if meta is unavailable */});
+  }, []);
 
   // One-time session init once auth is resolved.
   useEffect(() => {
@@ -135,7 +151,7 @@ export function PracticePage() {
     const clip = await recordClip(videoRef.current, { durationMs: 3000 });
 
     setStep('predicting');
-    const tensor = framesToTensor(clip.frames, clip.size, PLACEHOLDER_NORM.mean, PLACEHOLDER_NORM.std);
+    const tensor = framesToTensor(clip.frames, clip.size, norm.mean, norm.std);
     const recognizer = createRecognizer(selected, byClassIndex.size || 75);
     const probs = softmax(await recognizer.recognize(tensor));
 

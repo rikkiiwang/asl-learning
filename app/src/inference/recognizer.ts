@@ -67,6 +67,7 @@ export class OnnxRecognizer implements Recognizer {
 // Per-model artifact URLs. Empty until the model side publishes to /models;
 // until then every model resolves to a (per-id) stub so the loop still runs.
 const MODEL_URLS: Record<string, string> = {
+  'own-v1': '/models/asl-v1.onnx',
   // 'own-v2': '/models/asl-v0.2.onnx',
 };
 
