@@ -336,7 +336,14 @@ function ResultCard({
       {hint && <p className="hint">💡 {hint}</p>}
       {outcome === 'reveal' && (
         <p className="muted" style={{ fontSize: 13 }}>
-          Here’s the reference for <strong>{label}</strong> — (reference clips arrive with the dataset; M6.)
+          Want to see how it’s signed?{' '}
+          <a
+            href={`https://www.signingsavvy.com/search/${encodeURIComponent(label.toLowerCase())}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Watch a reference for <strong>{label}</strong> ↗
+          </a>
         </p>
       )}
 
