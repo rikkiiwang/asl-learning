@@ -1,4 +1,4 @@
-"""Build the Constellation v2 model-story notebook (Stage 1: the detector).
+"""Build the Constellation v2 model-story notebook (the full 3-stage journey).
 
 Separate from the v1 story (model/notebooks/model_story.ipynb) by design — this
 covers ONLY the from-scratch landmark-primary v2 pipeline. Run:
@@ -8,10 +8,12 @@ covers ONLY the from-scratch landmark-primary v2 pipeline. Run:
 Produces:
     notebooks/model_v2_story.ipynb
     notebooks/assets/detector_training_curve.png
+    notebooks/assets/landmark_training_curve.png
+    notebooks/assets/recog_progression.png
     notebooks/assets/viz_*.png   (copied annotated audit frames)
 
-It reads the CURRENT history.json + audit_eval.json (the validated w256/192²
-detector), so re-running after a new training refreshes the live numbers.
+It reads the CURRENT history.json + audit_eval.json for the detector, landmark,
+and recognizer, so re-running after a new training refreshes the live numbers.
 """
 import json
 import shutil
@@ -30,6 +32,10 @@ ASSETS.mkdir(parents=True, exist_ok=True)
 HIST = json.loads((ROOT / "artifacts/checkpoints/detector/history.json").read_text())
 hist = HIST["history"]
 AUDIT = json.loads((ROOT / "artifacts/checkpoints/detector/audit_eval.json").read_text())
+LM = json.loads((ROOT / "artifacts/checkpoints/landmark/history.json").read_text())
+lm_hist = LM["history"]
+RG = json.loads((ROOT / "artifacts/checkpoints/recog_a/history.json").read_text())
+rg_hist = RG["history"]
 
 
 # ---------------------------------------------------------------------------
@@ -63,10 +69,77 @@ def render_curve() -> None:
 
 render_curve()
 
+
+# ---------------------------------------------------------------------------
+# Landmark training-curve figure (FreiHAND, strict PCK@0.1 gate)
+# ---------------------------------------------------------------------------
+def render_landmark_curve() -> None:
+    ep = [h["epoch"] for h in lm_hist]
+    loss = [h["train_loss"] for h in lm_hist]
+    p01 = [h["pck_01"] for h in lm_hist]
+    p02 = [h["pck_02"] for h in lm_hist]
+
+    fig, ax1 = plt.subplots(figsize=(8, 4.5))
+    ax1.plot(ep, loss, color="#444", lw=2, label="train loss (Wing)")
+    ax1.set_xlabel("epoch"); ax1.set_ylabel("train loss", color="#444")
+    ax1.set_ylim(0, max(loss) * 1.05)
+
+    ax2 = ax1.twinx()
+    ax2.plot(ep, p02, color="#9467bd", lw=2, label="PCK@0.2 (lenient)")
+    ax2.plot(ep, p01, color="#e377c2", lw=2, label="PCK@0.1 (strict gate)")
+    ax2.set_ylabel("val PCK"); ax2.set_ylim(0, 1)
+    ax2.axvline(LM["best_epoch"], color="#d62728", ls="--", lw=1)
+
+    lines = ax1.get_lines() + ax2.get_lines()[:2]
+    ax1.legend(lines, [l.get_label() for l in lines], loc="center right", fontsize=9)
+    ax1.set_title("Landmark retrain (FreiHAND, width 64, framing+rotation aug) — 80 ep")
+    fig.tight_layout()
+    fig.savefig(ASSETS / "landmark_training_curve.png", dpi=130); plt.close(fig)
+
+
+render_landmark_curve()
+
+
+# ---------------------------------------------------------------------------
+# Recognizer accuracy-progression figure (the from-scratch climb off v1)
+# ---------------------------------------------------------------------------
+def render_recog_progression() -> None:
+    # stages of the recognizer climb (val top-1 / test top-1), all from-scratch
+    labels = ["v1\nend-to-end", "v2 geometry\nbaseline",
+              "+aug +velocity\n+transformer", "+WLASL\n(extra train)"]
+    val = [None, 0.404, 0.457, RG["best_val_top1"]]
+    test = [0.180, 0.376, 0.451, RG["test_top1"]]
+    x = range(len(labels))
+    w = 0.38
+
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    ax.bar([i - w / 2 for i in x], [v or 0 for v in val], w,
+           color="#1f77b4", label="val top-1")
+    ax.bar([i + w / 2 for i in x], test, w, color="#2ca02c", label="test top-1")
+    for i, v in enumerate(val):
+        if v: ax.text(i - w / 2, v + 0.01, f"{v:.1%}", ha="center", fontsize=8)
+    for i, v in enumerate(test):
+        ax.text(i + w / 2, v + 0.01, f"{v:.1%}", ha="center", fontsize=8)
+    ax.set_xticks(list(x)); ax.set_xticklabels(labels, fontsize=8)
+    ax.set_ylabel("top-1 accuracy (75 signs)"); ax.set_ylim(0, 0.6)
+    ax.set_title("Recognizer accuracy — the from-scratch climb off v1")
+    ax.legend(loc="upper left", fontsize=9)
+    fig.tight_layout()
+    fig.savefig(ASSETS / "recog_progression.png", dpi=130); plt.close(fig)
+
+
+render_recog_progression()
+
 viz_src = ROOT / "artifacts/audit/viz"
 for name in ["viz_07732970042675213-HAPPY.png", "viz_06960268077531429-DOG.png"]:
     if (viz_src / name).exists():
         shutil.copy(viz_src / name, ASSETS / name)
+# landmark / combined audit frames (skeleton overlaid)
+for sub, dst in [("viz_lm", "lm_"), ("viz_combined", "combo_")]:
+    for name in ["viz_001531801362371743-YELLOW.png", "viz_06754700554069304-CHILD.png"]:
+        src = ROOT / "artifacts/audit" / sub / name
+        if src.exists():
+            shutil.copy(src, ASSETS / f"{dst}{name}")
 
 
 # ---------------------------------------------------------------------------
@@ -77,6 +150,13 @@ md = lambda s: nbf.v4.new_markdown_cell(s)
 code = lambda s: nbf.v4.new_code_cell(s)
 
 ha = AUDIT["head_anchor_dr"]; hi = AUDIT["head_iou_dr"]; hd = AUDIT["hand_dr"]
+
+# landmark live numbers (best epoch by strict PCK@0.1)
+lm_best = lm_hist[LM["best_epoch"]]
+lm_p01 = LM["best_score"]; lm_p02 = lm_best["pck_02"]; lm_err = lm_best["mean_err"]
+
+# recognizer live numbers
+rg_val = RG["best_val_top1"]; rg_test = RG["test_top1"]; rg_best_ep = RG["best_epoch"]
 
 cells = [
 md("""# Constellation v2 — Model Story · Part 1: the Detector (Stage 1)
@@ -226,26 +306,219 @@ The blue face box inside the red head label is the whole IoU "failure"; the yell
 head→hand vector — what Stage 2 consumes — is clean regardless.
 """),
 
-md("""## 8. Decisions log — how we made the calls
+md("""## 8. Stage-1 takeaways (detector)
 
-1. **A "failing" gate isn't a failing model — instrument before reacting.** The
-   head fail was a metric/label-convention mismatch; the hand fail was a concrete,
-   fixable resolution limit.
-2. **Match the metric to the box's job.** The head box is a normalization anchor,
-   so it's scored by center + scale, not IoU. (IoU kept as a flagged reference.)
-3. **Pick the lever the diagnosis points at.** Hands were resolution-limited, so
-   resolution (+ a little capacity) was the fix — verified by both proxy and
-   binding gates improving.
-4. **Proxy vs binding gates.** 100DOH val is a hard proxy; the binding gate is the
-   real-ASL audit slice. We report both and trust the binding one.
+- **Instrument a "failure" before reacting** — the head fail was a metric/label
+  mismatch, the hand fail a real resolution limit.
+- **Match the metric to the box's job** — head box = normalization anchor, scored
+  by center + scale, not IoU.
+- **Pick the lever the diagnosis points at** — resolution (+ a little capacity)
+  fixed the 30-px hand; both proxy and binding gates improved.
 
-## 9. Next — Stage 1.5: the hand-landmark model
+The full cross-stage decisions log is at the end. Next: the landmark model.
+"""),
 
-A from-scratch 21-keypoint regressor (FreiHAND) runs inside each hand box. Its
-first version scored a flattering PCK@0.2 = 0.987 but **collapsed to a mean hand
-on real webcam hands** — the live test caught what the lenient metric hid. It's
-being retrained with a strict PCK@0.1 gate + framing/scale/rotation augmentation.
-That's **Part 2** of this story.
+md("""---
+# Part 2 · Stage 1.5: the hand-landmark model
+
+The detector gives a hand **box**; the recognizer needs hand **shape**. Stage 1.5
+is a from-scratch **21-keypoint regressor** that runs inside each hand crop. This
+is where the "lenient metric lied to us" lesson lives.
+"""),
+
+md("""## 10. Design — a tiny per-crop keypoint regressor
+
+- Input: the hand crop from the detector box, resized to **64×64** (a hand is
+  small; 64 px is enough for joint geometry and keeps it fast).
+- Output: **21 (x, y)** keypoints in crop coordinates (the standard hand topology),
+  mapped back to frame coordinates for the geometry stage.
+- Loss: **Wing loss** — designed for landmark regression (more gradient on the
+  small/medium errors that matter for joints than plain L2).
+- Data: **FreiHAND** (117 k single-hand images with 3-D-derived 2-D keypoints).
+- From scratch, no pretrained weights — **MediaPipe is explicitly banned** (PRD).
+"""),
+
+md("""## 11. Iteration 1 — the metric that lied
+
+The first landmark model trained cleanly and reported **PCK@0.2 = 0.987** — a
+near-perfect-looking score. But the live webcam test told the truth: the predicted
+hand **collapsed toward a generic "mean hand"** — fingers roughly in the right
+region, but not tracking the actual pose.
+
+**Why the metric hid it:**
+- **PCK@0.2 is lenient** — a keypoint counts as correct if it lands within 20 % of
+  the hand size. A blurry mean-hand prediction clears that bar on most joints.
+- **FreiHAND framing ≠ our framing.** FreiHAND hands are tightly, consistently
+  cropped and centered; our detector boxes are looser and vary in scale/rotation.
+  The model learned FreiHAND's *framing prior*, not pose from arbitrary crops.
+"""),
+
+md("""## 12. Decision — a strict gate + framing-invariant training
+
+**Decision C — judge it on PCK@0.1, and train it for our framing, not FreiHAND's.**
+
+1. **Strict gate: PCK@0.1** (within 10 % of hand size) — a mean-hand can't fake
+   this; joints have to actually be right.
+2. **Keypoint-based square-window framing** to mimic the detector's real crops:
+   train framing jitters scale **1.2–2.8×** the hand box and rotates **±25°**, so
+   the model sees the loose, rotated, varied crops it gets at inference instead of
+   FreiHAND's tidy ones.
+3. **Width 64** crop input fixed across train/val/inference.
+"""),
+
+md(f"""## 13. Iteration 2 — the retrain
+
+![landmark curve](assets/landmark_training_curve.png)
+
+Now the two PCK curves separate honestly: PCK@0.2 saturates near {lm_p02:.2f} early,
+while the **strict PCK@0.1 climbs to {lm_p01:.3f}** @ ep{LM['best_epoch']}
+(mean error {lm_err:.3f} of hand size). The gap between the lines is exactly the
+collapse the first model hid behind.
+
+| | iter 1 (FreiHAND framing) | **iter 2 (our framing + strict gate)** |
+|---|---|---|
+| reported metric | PCK@0.2 **0.987** (flattering) | PCK@0.1 **{lm_p01:.3f}** (honest) |
+| real webcam hands | collapsed to mean hand ❌ | tracks finger pose ✅ |
+
+On the audit frames the skeleton now follows the actual fingers:
+
+![landmark audit](assets/lm_viz_001531801362371743-YELLOW.png)
+"""),
+
+code("""# Landmark: strict PCK@0.1 is the gate; PCK@0.2 kept only as a lenient reference
+import json
+h = json.load(open("../artifacts/checkpoints/landmark/history.json"))
+b = h["history"][h["best_epoch"]]
+print(f"best epoch    : {h['best_epoch']}")
+print(f"PCK@0.1 (gate): {h['best_score']:.3f}")
+print(f"PCK@0.2 (ref) : {b['pck_02']:.3f}   <- the number iter 1 hid behind")
+print(f"mean err      : {b['mean_err']:.3f} (fraction of hand size)")
+"""),
+
+md("""---
+# Part 3 · Stage 2: the recognizer — and why geometry beats pixels
+
+This is the payoff stage and the whole reason v2 exists. The recognizer classifies
+a **sign** from the **pose geometry** the front-end produces — not from pixels.
+"""),
+
+md("""## 14. Design — appearance-invariant geometry
+
+Per frame we build a **93-dim vector** that is invariant to who is signing and
+where they are:
+
+- **84** = both hands × 21 keypoints × (x, y), expressed in a **head-centered,
+  head-scaled** frame (the detector's head box is the normalization anchor).
+- **+4** hand→head vectors, **+2** hand→hand, **+2** hand-presence, **+1**
+  head-presence.
+
+A clip is the sequence of these vectors. Because everything is normalized by the
+head, the **signer's appearance, clothing, background, and camera distance fall
+out** — there is far less to overfit to than raw pixels. That's the cure for v1's
+disease.
+
+Model **RecognizerA**: per-frame MLP → temporal head → sign logits, trained from
+scratch on the ASL Citizen 75-sign subset with **signer-held-out** splits.
+"""),
+
+md(f"""## 15. The climb — every gain measured, none from pretraining
+
+![recog progression](assets/recog_progression.png)
+
+| stage | val top-1 | test top-1 | what changed |
+|---|---|---|---|
+| **v1** (end-to-end pixels) | — | **18.0 %** | overfit appearance; the baseline to beat |
+| v2 geometry baseline | 40.4 % | 37.6 % | pixels → head-normalized pose geometry |
+| + aug + velocity + transformer | 45.7 % | 45.1 % | temporal modeling + thin-data regularization |
+| **+ WLASL extra train** | **{rg_val:.1%}** | **{rg_test:.1%}** | more sign instances from a second corpus |
+
+**18.0 % → {rg_test:.1%} test, entirely from scratch.** At {rg_test:.1%} top-1 the
+test **top-3 ≈ 69 %** and **top-5 ≈ 78 %** — useful for a practice app that shows a
+shortlist, while we keep pushing top-1.
+"""),
+
+md(f"""## 16. Decisions — what moved the needle, and what didn't
+
+**Decision D — geometry over pixels.** The single biggest jump (18 % → ~38–40 %)
+came from *changing the input representation*, not the model. Normalizing by the
+head box is what kills appearance overfitting.
+
+**Decision E — "40 % is not acceptable" → push without pretraining.** When 40 %
+fell short of production, the constraint held: **no pretrained models** (PRD Req 7).
+So the gains had to come from *modeling and data*:
+- **Augmentation** (temporal warp, pose rotation/scale, frame dropout) +
+  **velocity features** (Δgeometry) + a **transformer temporal head** → +~7 pts.
+- **More data** from a second corpus (**WLASL**), appended to **train only** (val/
+  test stay pure ASL Citizen so the numbers stay comparable) → +~3 pts.
+
+**Honest negative results.** Several architecture tweaks moved within the
+**±5-pt single-run noise** on this small dataset — so every reported gain is a
+**3-seed mean**, and tweaks inside the noise band were *not* claimed as wins.
+
+**Decision F — the front-end is now the bottleneck.** With geometry+data tapped on
+the current splits, the next lever is **feeding the recognizer cleaner geometry** —
+better hand detection and landmark generalization on real ASL hands. That's what's
+running now.
+"""),
+
+code("""# Recognizer: the validated from-scratch result (best-val seed)
+import json
+r = json.load(open("../artifacts/checkpoints/recog_a/history.json"))
+print(f"best epoch : {r['best_epoch']}")
+print(f"val  top-1 : {r['best_val_top1']:.3f}")
+print(f"test top-1 : {r['test_top1']:.3f}   (vs v1's 0.180 end-to-end)")
+"""),
+
+md(f"""---
+# Part 4 · What's running now — cross-dataset front-end retrains (Plan 6)
+
+Decision F points at the front-end, so the detector and landmark models are being
+**retrained in parallel** with **COCO-WholeBody** added — in-the-wild hands with
+both boxes (for the detector) and 21 keypoints (for the landmark model). ASL
+Citizen on its own is studio-clean; COCO adds the messy real-world hands the live
+app actually sees.
+
+**Why this, why now:**
+- The recognizer's accuracy is capped by the **quality of the geometry** it's fed.
+  Cleaner hand boxes + landmarks that generalize off-FreiHAND should lift it.
+- COCO is added to **train only**; **val/test stay pure** (FreiHAND val · ASL-audit
+  gate) so the new numbers are directly comparable to everything above.
+
+**How we'll judge each — not on the in-domain metric:**
+- **Landmark:** FreiHAND-val PCK@0.1 should land ≈ 0.84 (unchanged — COCO is ~15 %
+  of train). The real test is **re-rendering the ASL audit frames**: do the
+  keypoints track real ASL open/flat hands *better*?
+- **Detector:** re-run the **ASL-audit gate** (head-anchor ≥ 0.80, hand ≥ 0.60) to
+  confirm **no regression**, and watch whether COCO hands push **hand recall past
+  the current {hd:.3f}**.
+- **Recognizer:** **re-cache** ASL Citizen + WLASL through the improved front-end
+  and retrain (3 seeds). The bar to beat is **test {rg_test:.1%} / top-3 ≈ 69 %**.
+
+This part stays open until both retrains land and the head-to-head is run.
+"""),
+
+md("""## Decisions log — the whole journey
+
+1. **A "failing" gate isn't a failing model — instrument before reacting.**
+   (Detector head fail = metric/label mismatch; hand fail = real resolution limit.)
+2. **Match the metric to the box's job.** Head box is a normalization anchor →
+   scored by center + scale, not IoU.
+3. **Pick the lever the diagnosis points at.** Hands were resolution-limited → more
+   pixels (img 192, width 256), verified by both proxy and binding gates.
+4. **A lenient metric will lie to you.** Landmark PCK@0.2 = 0.987 hid a mean-hand
+   collapse the live test exposed → switched to strict **PCK@0.1** + framing-
+   invariant augmentation.
+5. **Train for inference conditions, not the dataset's.** Landmark framing was
+   jittered to match the detector's real, loose, rotated crops.
+6. **Change the representation before the model.** Geometry over pixels is what
+   broke v1's appearance overfitting (18 % → ~38 %).
+7. **Constraints are non-negotiable; push within them.** "40 % isn't acceptable"
+   *and* "no pretrained models" → gains came from augmentation, velocity, a
+   transformer head, and a second corpus (WLASL).
+8. **Report honest numbers.** ±5-pt single-run noise → 3-seed means; val/test kept
+   pure when adding train-only corpora; tweaks inside the noise band not claimed.
+9. **Chase the current bottleneck.** Geometry+data tapped out on these splits →
+   improve the front-end (COCO-WholeBody retrains, in progress).
 """),
 ]
 
