@@ -44,6 +44,8 @@ INCLUDE_RECOG = [
     "src/aslv2",
     "configs",
     "pyproject.toml",
+    "scripts/build_msasl_subset.py",   # the notebook runs this to fetch MS-ASL clips
+    "artifacts/manifest/manifest.json",       # 75-sign gloss->label_idx map (adapter)
     "artifacts/manifest/signer_splits.json",
     "artifacts/cache/constellation_clips.slim.npz",
     "artifacts/cache/wlasl_clips.slim.npz",

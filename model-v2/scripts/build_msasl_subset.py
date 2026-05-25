@@ -23,10 +23,22 @@ import subprocess
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-OUR_MANIFEST = REPO / "model" / "artifacts" / "manifest" / "manifest.json"
-OUT_DIR = REPO / "model-v2" / "data" / "msasl"
+MODELV2 = Path(__file__).resolve().parents[1]
+# manifest lives in the v1 tree locally, but is bundled under model-v2/artifacts on Colab
+_MANIFEST_CANDIDATES = [
+    REPO / "model" / "artifacts" / "manifest" / "manifest.json",
+    MODELV2 / "artifacts" / "manifest" / "manifest.json",
+]
+OUT_DIR = MODELV2 / "data" / "msasl"
 OUT_VIDEOS = OUT_DIR / "videos"
 CLIPS_JSON = OUT_DIR / "clips.json"
+
+
+def _resolve_manifest(arg: str | None) -> Path:
+    for p in ([Path(arg)] if arg else []) + _MANIFEST_CANDIDATES:
+        if p.exists():
+            return p
+    raise SystemExit(f"manifest.json not found; tried {_MANIFEST_CANDIDATES} — pass --manifest")
 
 _YT_ID = re.compile(r"(?:v=|youtu\.be/|/embed/|/shorts/)([0-9A-Za-z_-]{11})")
 
@@ -40,9 +52,9 @@ def _yt_id(url: str) -> str | None:
     return m.group(1) if m else None
 
 
-def _label_map() -> dict:
+def _label_map(manifest: Path) -> dict:
     """gloss (exact + normalized) -> our label_idx."""
-    our = json.loads(OUR_MANIFEST.read_text())["signs"]
+    our = json.loads(manifest.read_text())["signs"]
     label_of: dict[str, int] = {}
     for s in our:
         g = s["gloss"].upper()
@@ -106,10 +118,12 @@ def main():
     ap.add_argument("--max-per-sign", type=int, default=40,
                     help="cap clips per sign for class balance + bounded download (0=no cap)")
     ap.add_argument("--limit", type=int, default=None, help="global cap (debug)")
+    ap.add_argument("--manifest", default=None,
+                    help="path to the 75-sign manifest.json (auto-detected if omitted)")
     args = ap.parse_args()
 
     OUT_VIDEOS.mkdir(parents=True, exist_ok=True)
-    label_of = _label_map()
+    label_of = _label_map(_resolve_manifest(args.manifest))
     ann_dir = Path(args.ann_dir)
 
     cands = list(_load_matched(ann_dir, args.splits, label_of))
