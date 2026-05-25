@@ -73,8 +73,9 @@ def main():
     ap.add_argument("--dropout", type=float, default=None)
     ap.add_argument("--strong-aug", action="store_true")
     ap.add_argument("--seed", type=int, default=None)
-    ap.add_argument("--extra-cache", default=None,
-                    help="extra cache (e.g. WLASL) appended to TRAIN only")
+    ap.add_argument("--extra-cache", action="append", default=None,
+                    help="extra cache(s) (e.g. WLASL, MS-ASL) appended to TRAIN only; "
+                         "repeatable")
     ap.add_argument("--out-dir", default=None)
     args = ap.parse_args()
     cfg = yaml.safe_load(open(args.config))
@@ -90,7 +91,7 @@ def main():
     if args.seed is not None:
         cfg["seed"] = args.seed
     if args.extra_cache is not None:
-        cfg["extra_cache"] = args.extra_cache
+        cfg["extra_cache"] = args.extra_cache    # list from repeated --extra-cache
     if cfg.get("variant", "a") != "a":
         raise SystemExit("only variant 'a' is implemented; B arrives in Task 6")
 
@@ -100,17 +101,24 @@ def main():
     lc = cfg.get("variant", "a") == "b"     # only Recognizer B needs the crops
     sa = cfg.get("strong_aug", False)
     if cfg.get("extra_cache"):
-        # append the extra corpus (e.g. WLASL, participant="WLASL") to TRAIN only;
+        # append one or more extra corpora (e.g. WLASL, MS-ASL) to TRAIN only;
         # val/test stay pure ASL Citizen signer-held-out for a clean v1 comparison.
+        # Each corpus tags its clips with a constant participant (e.g. "WLASL",
+        # "MSASL"); we map every such tag to "train" so none can leak into val/test.
+        extras = cfg["extra_cache"]
+        if isinstance(extras, str):
+            extras = [extras]
         keys = ["geom", "y", "participant"]
-        m = np.load(cache, allow_pickle=True)
-        x = np.load(cfg["extra_cache"], allow_pickle=True)
-        combined = {k: np.concatenate([np.asarray(m[k]), np.asarray(x[k])]) for k in keys}
+        arrs = [np.load(cache, allow_pickle=True)]
+        arrs += [np.load(p, allow_pickle=True) for p in extras]
+        combined = {k: np.concatenate([np.asarray(a[k]) for a in arrs]) for k in keys}
         smap = dict(json.load(open(splits)))
-        smap["WLASL"] = "train"
+        for a, p in zip(arrs[1:], extras):
+            for tag in set(np.asarray(a["participant"]).astype(str).tolist()):
+                smap[tag] = "train"
+            print(f"+extra_cache: {len(a['y'])} clips -> train  ({Path(p).name})")
         tr = RecogDataset(combined, "train", smap, train=True,
                           kp_jitter=cfg["kp_jitter"], load_crops=False, strong_aug=sa)
-        print(f"+extra_cache: {len(x['y'])} clips -> train")
     else:
         tr = RecogDataset(cache, "train", splits, train=True, kp_jitter=cfg["kp_jitter"],
                           load_crops=lc, strong_aug=sa)

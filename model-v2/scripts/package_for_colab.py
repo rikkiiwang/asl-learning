@@ -38,6 +38,19 @@ INCLUDE_LANDMARK = [
     "artifacts/landmark/val_small.json",
 ]
 
+# Recognizer (MS-ASL) bundle: code + splits + slim val/test & WLASL caches +
+# the trained front-end (detector+landmark) used to cache MS-ASL on Colab.
+INCLUDE_RECOG = [
+    "src/aslv2",
+    "configs",
+    "pyproject.toml",
+    "artifacts/manifest/signer_splits.json",
+    "artifacts/cache/constellation_clips.slim.npz",
+    "artifacts/cache/wlasl_clips.slim.npz",
+    "artifacts/checkpoints/detector/best.pt",
+    "artifacts/checkpoints/landmark/best.pt",
+]
+
 
 def add(z: zipfile.ZipFile, path: str) -> None:
     """Add a file or directory tree (skipping __pycache__) to the zip."""
@@ -68,6 +81,11 @@ def main() -> None:
         help="Package landmark code + manifests instead of detector.",
     )
     ap.add_argument(
+        "--recog",
+        action="store_true",
+        help="Package recognizer code + splits + slim caches + front-end checkpoints.",
+    )
+    ap.add_argument(
         "--out",
         default=None,
         help=(
@@ -78,7 +96,13 @@ def main() -> None:
     )
     args = ap.parse_args()
 
-    if args.landmark:
+    if args.recog:
+        include  = INCLUDE_RECOG
+        out_path = args.out or "artifacts/colab_recog_code.zip"
+        img_zip  = None
+        img_note = "MS-ASL videos are downloaded ON Colab (yt-dlp) — nothing to upload"
+        drive    = "MyDrive/asl-recognizer/"
+    elif args.landmark:
         include  = INCLUDE_LANDMARK
         out_path = args.out or "artifacts/colab_landmark_code.zip"
         img_zip  = "artifacts/landmark_small.zip"
@@ -111,9 +135,14 @@ def main() -> None:
     for g, count in sorted(groups.items()):
         print(f"  {g}/  ({count} file{'s' if count != 1 else ''})")
 
-    print(f"\nUpload these 2 files to your Drive folder (e.g. {drive}):")
-    print(f"  {out_path}    <- code + manifests (this file)")
-    print(f"  {img_zip}     <- {img_note}")
+    if img_zip:
+        print(f"\nUpload these 2 files to your Drive folder (e.g. {drive}):")
+        print(f"  {out_path}    <- code + manifests (this file)")
+        print(f"  {img_zip}     <- {img_note}")
+    else:
+        print(f"\nUpload this 1 file to your Drive folder (e.g. {drive}):")
+        print(f"  {out_path}    <- code + splits + slim caches + front-end checkpoints")
+        print(f"  ({img_note})")
     print("\nSee model-v2/COLAB.md for details.")
 
 
