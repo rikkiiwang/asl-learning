@@ -48,7 +48,7 @@ export function PracticePage() {
   const [searchParams] = useSearchParams();
   const targetSignId = searchParams.get('sign');
   const { selected } = useModel();
-  const { videoRef, state: cam, error: camError, start, resume } = useCamera();
+  const { videoRef, attachVideo, state: cam, error: camError, start, resume } = useCamera();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const initRef = useRef(false);
   const recordedOnceRef = useRef(false);
@@ -294,7 +294,7 @@ export function PracticePage() {
       )}
 
       <div className="video-wrap" style={{ display: cam === 'ready' ? 'block' : 'none' }}>
-        <video ref={videoRef} muted playsInline />
+        <video ref={attachVideo} muted playsInline />
         <div aria-hidden className="frame-guide" />
         {step === 'counting' && (
           <div className="overlay-center">
