@@ -73,6 +73,8 @@ def main():
     ap.add_argument("--dropout", type=float, default=None)
     ap.add_argument("--strong-aug", action="store_true")
     ap.add_argument("--seed", type=int, default=None)
+    ap.add_argument("--extra-cache", default=None,
+                    help="extra cache (e.g. WLASL) appended to TRAIN only")
     ap.add_argument("--out-dir", default=None)
     args = ap.parse_args()
     cfg = yaml.safe_load(open(args.config))
@@ -87,6 +89,8 @@ def main():
         cfg["strong_aug"] = True
     if args.seed is not None:
         cfg["seed"] = args.seed
+    if args.extra_cache is not None:
+        cfg["extra_cache"] = args.extra_cache
     if cfg.get("variant", "a") != "a":
         raise SystemExit("only variant 'a' is implemented; B arrives in Task 6")
 
@@ -94,8 +98,22 @@ def main():
     cache = cfg["cache"]; splits = cfg.get("signer_splits", DEFAULT_SPLITS)
 
     lc = cfg.get("variant", "a") == "b"     # only Recognizer B needs the crops
-    tr = RecogDataset(cache, "train", splits, train=True, kp_jitter=cfg["kp_jitter"],
-                      load_crops=lc, strong_aug=cfg.get("strong_aug", False))
+    sa = cfg.get("strong_aug", False)
+    if cfg.get("extra_cache"):
+        # append the extra corpus (e.g. WLASL, participant="WLASL") to TRAIN only;
+        # val/test stay pure ASL Citizen signer-held-out for a clean v1 comparison.
+        keys = ["geom", "y", "participant"]
+        m = np.load(cache, allow_pickle=True)
+        x = np.load(cfg["extra_cache"], allow_pickle=True)
+        combined = {k: np.concatenate([np.asarray(m[k]), np.asarray(x[k])]) for k in keys}
+        smap = dict(json.load(open(splits)))
+        smap["WLASL"] = "train"
+        tr = RecogDataset(combined, "train", smap, train=True,
+                          kp_jitter=cfg["kp_jitter"], load_crops=False, strong_aug=sa)
+        print(f"+extra_cache: {len(x['y'])} clips -> train")
+    else:
+        tr = RecogDataset(cache, "train", splits, train=True, kp_jitter=cfg["kp_jitter"],
+                          load_crops=lc, strong_aug=sa)
     va = RecogDataset(cache, "val", splits, train=False, load_crops=lc)
     te = RecogDataset(cache, "test", splits, train=False, load_crops=lc)
     print(f"train={len(tr)}  val={len(va)}  test={len(te)}")

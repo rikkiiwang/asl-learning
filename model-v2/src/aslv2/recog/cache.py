@@ -111,6 +111,11 @@ def main():
     ap.add_argument("--out", default="artifacts/cache/constellation_clips.npz")
     ap.add_argument("--max-clips", type=int, default=None)
     ap.add_argument("--score-thr", type=float, default=0.3)
+    # process a flat clip list from another corpus (e.g. WLASL) instead of the
+    # ASL Citizen sign-structured manifest:
+    ap.add_argument("--clips-json", default=None,
+                    help="flat [{file, participant, label_idx}] list")
+    ap.add_argument("--video-dir", default=None, help="dir holding those videos")
     args = ap.parse_args()
 
     dev = _device()
@@ -124,9 +129,15 @@ def main():
     lm.load_state_dict(lck["state_dict"]); lm.eval()
     lnorm = lck["cfg"]["norm"]
 
-    manifest = json.loads(MANIFEST.read_text())
-    clips = [(c["file"], c["participant"], sign["label_idx"])
-             for sign in manifest["signs"] for c in sign["clips"]]
+    if args.clips_json:
+        flat = json.loads(Path(args.clips_json).read_text())
+        clips = [(c["file"], c["participant"], c["label_idx"]) for c in flat]
+        video_dir = Path(args.video_dir)
+    else:
+        manifest = json.loads(MANIFEST.read_text())
+        clips = [(c["file"], c["participant"], sign["label_idx"])
+                 for sign in manifest["signs"] for c in sign["clips"]]
+        video_dir = VIDEO_DIR
     if args.max_clips:
         clips = clips[:args.max_clips]
     print(f"{len(clips)} clips to process (detector w={dcfg['width']} img={dcfg['img']}, landmark w={lck['cfg']['width']})")
@@ -134,7 +145,7 @@ def main():
     geoms, cropss, ys, parts = [], [], [], []
     head_rate, hand_rate, done, missing = 0.0, 0.0, 0, 0
     for n, (file, part, y) in enumerate(clips):
-        vp = VIDEO_DIR / file
+        vp = video_dir / file
         if not vp.exists():
             missing += 1; continue
         frames = decode_frames(vp, K)
