@@ -38,19 +38,27 @@ describe('decidePassFail', () => {
     expect(d.margin).toBeCloseTo(0.3, 6);
   });
 
-  // Default policy (DEFAULT_THRESHOLDS = 0/0): pass iff the prompted sign is top-1,
-  // regardless of confidence or margin.
-  it('default thresholds: passes whenever the prompted sign is the top-1 (even low/thin)', () => {
-    const d = decidePassFail([0.3, 0.28, 0.1], 0); // prompted wins, but low conf + thin margin
+  // Default policy (DEFAULT_THRESHOLDS: passTopN=3, gating off): pass iff the
+  // prompted sign is within the model's top-3, regardless of confidence/margin.
+  it('default top-3 policy: passes when the prompted sign is the top-1', () => {
+    const d = decidePassFail([0.3, 0.28, 0.1], 0);
+    expect(d.pass).toBe(true);
+    expect(d.failReason).toBeNull();
+  });
+
+  it('default top-3 policy: passes when the prompted sign is 3rd (within top-3)', () => {
+    // prompted = index 2 (prob 0.20) ranks 3rd -> pass; predicted/top-1 is index 0.
+    const d = decidePassFail([0.4, 0.35, 0.2, 0.05], 2);
     expect(d.pass).toBe(true);
     expect(d.predictedIndex).toBe(0);
     expect(d.failReason).toBeNull();
   });
 
-  it('default thresholds: still fails when a different sign is the top-1', () => {
-    const d = decidePassFail([0.3, 0.4, 0.1], 0);
+  it('default top-3 policy: fails when the prompted sign is outside the top-3', () => {
+    // prompted = index 3 (prob 0.10) ranks 4th -> fail.
+    const d = decidePassFail([0.4, 0.3, 0.18, 0.1], 3);
     expect(d.pass).toBe(false);
     expect(d.failReason).toBe('wrong_sign');
-    expect(d.predictedIndex).toBe(1);
+    expect(d.predictedIndex).toBe(0);
   });
 });
