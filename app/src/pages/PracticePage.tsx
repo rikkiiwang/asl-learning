@@ -51,6 +51,7 @@ export function PracticePage() {
   const { videoRef, state: cam, error: camError, start, resume } = useCamera();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const initRef = useRef(false);
+  const recordedOnceRef = useRef(false);
 
   const [phase, setPhase] = useState<Phase>('loading');
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -78,10 +79,11 @@ export function PracticePage() {
     void start();
   }, [start]);
 
-  // Keep the live preview alive across attempts — the <video> can blank after the
-  // first capture, so re-bind the stream on every non-recording state transition.
+  // The <video> can blank AFTER the first capture, so re-bind the live stream when
+  // we return to a ready state — but only once a recording has happened, so we
+  // don't race the camera's own initial attach on mount (which works on its own).
   useEffect(() => {
-    if (cam === 'ready' && step !== 'recording') resume();
+    if (cam === 'ready' && step === 'ready' && recordedOnceRef.current) resume();
   }, [cam, step, deckIndex, attemptNumber, resume]);
 
   // Load the model's mean/std so the input tensor matches training.
@@ -154,6 +156,7 @@ export function PracticePage() {
     }
 
     setStep('recording');
+    recordedOnceRef.current = true; // enable preview re-bind on subsequent attempts
     const clip = await recordClip(videoRef.current, { durationMs: 3000 });
 
     setStep('predicting');
