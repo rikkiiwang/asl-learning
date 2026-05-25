@@ -23,3 +23,6 @@ seed:              1337
 num_workers:       0
 
 out_dir:   artifacts/checkpoints/recog_a
+
+# WLASL cross-dataset added to TRAIN only (val/test stay ASL Citizen signer-held-out)
+extra_cache:  artifacts/cache/wlasl_clips.npz
