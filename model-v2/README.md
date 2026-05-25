@@ -47,10 +47,13 @@ disqualified. Landmark +COCO was a wash (PCK 0.840→0.826). **Validated base de
 + FreiHAND-only landmark stay in production**; candidates kept under
 `artifacts/checkpoints/*_coco/`.
 
-**In progress:** MS-ASL data expansion (74/75 signs matched, ~doubles train, same
-modality as WLASL). Adapter + Colab pipeline are ready
-(`scripts/build_msasl_subset.py`, `notebooks/train_recognizer_colab.ipynb`); bar to
-beat is test 47.9% / top-3 69%.
+**MS-ASL data expansion — tried, didn't help (not promoted).** 74/75 signs matched,
+~doubled train (train-only, same modality as WLASL). But the 3-seed result was a mild
+regression (test 0.454 ± 0.017, val 0.471 ± 0.013 vs baseline 0.479/0.498): raw
+YouTube clips give the front-end noisier geometry → label noise. Adapter + Colab
+pipeline remain (`scripts/build_msasl_subset.py`,
+`notebooks/train_recognizer_colab.ipynb`); a confidence-filtered slice is a possible
+salvage. **AC + WLASL (test 47.9%) stays.**
 
 **Full decision journey:** `notebooks/model_v2_story.ipynb` (rebuild with
 `.venv/bin/python notebooks/build_v2_story.py`).

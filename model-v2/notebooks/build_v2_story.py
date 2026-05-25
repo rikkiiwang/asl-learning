@@ -525,27 +525,39 @@ else:
 """),
 
 md(f"""---
-# Part 5 · Pushing data further — MS-ASL (in progress)
+# Part 5 · Pushing data further — MS-ASL (resolved: **didn't help**)
 
 With the front-end levers exhausted, the remaining ceiling is **data, not model
-capacity**. The evidence is direct: **+WLASL gave +2.8 pts with zero model changes**,
+capacity**. The evidence was direct: **+WLASL gave +2.8 pts with zero model changes**,
 while bigger models stayed inside the ±5-pt noise on this thin, signer-held-out
-data — more parameters would overfit, not help.
+data — more parameters would overfit, not help. So we tried a second ASL corpus,
+**MS-ASL**:
 
-So the next push is a second ASL corpus: **MS-ASL**.
-
-- **74/75** of our signs are in MS-ASL — **~3,690 instances**, roughly **doubling**
-  the training set (ASL Citizen 2,362 + WLASL 647).
+- **74/75** of our signs matched — **~3,690 instances**, roughly **doubling** the
+  training set (ASL Citizen 2,362 + WLASL 647).
 - **Same modality as WLASL** (isolated ASL signing video) — the property COCO
-  lacked, so transfer should actually work this time.
-- **Train-only**, val/test stay pure ASL Citizen signer-held-out → the result stays
-  directly comparable to **test {rg_test:.1%} / top-3 ≈ 69 %**, the bar to beat.
+  lacked — added **train-only**, val/test kept pure for a comparable number.
 
-The pipeline is built and running on Colab: a gloss-matched yt-dlp adapter
-(`build_msasl_subset.py`) → cache geometry through the **same validated front-end** →
-train RecognizerA (3 seeds). Expected realistically **+2–4 pts** after YouTube
-link-rot, not a guarantee. **Result pending** — this section closes when the 3-seed
-mean lands.
+A gloss-matched yt-dlp adapter (`build_msasl_subset.py`) → cache geometry through
+the **same validated front-end** → train RecognizerA (3 seeds) on Colab.
+
+**Result — a mild regression, measured across 3 seeds:**
+
+| training data | val top-1 | test top-1 |
+|---|---|---|
+| AC + WLASL (baseline) | **0.498** | **{rg_test:.3f}** (best-seed; ~0.474 mean) |
+| + MS-ASL (3-seed mean) | 0.471 ± 0.013 | 0.454 ± 0.017 |
+
+Test slipped ~2 pts and **val ~2.7 pts across all three seeds** — small, but
+consistent and outside MS-ASL's own tight spread. **Doubling the data made it worse.**
+
+**Why more data hurt here.** Both corpora are "more ASL video," so the difference is
+**geometry quality, not quantity.** MS-ASL is raw YouTube (profile views, multiple
+people, occlusion, low res), so the front-end often locks onto the wrong hand/head →
+**noisy geometry → label noise in train**. WLASL's cleaner dictionary-style clips
+produced trustworthy geometry; MS-ASL's didn't. A salvage path exists —
+confidence-filter MS-ASL clips and add only the clean slice — but **as-is it is not
+promoted.** The **AC + WLASL model (test {rg_test:.1%} / top-3 ≈ 69 %) stays.**
 """),
 
 md("""## Decisions log — the whole journey
@@ -573,8 +585,11 @@ md("""## Decisions log — the whole journey
    regression; the landmark was a wash. Validated front-end stays.
 10. **Cross-dataset transfer needs a matching modality.** WLASL (ASL signing video)
     helped; COCO-WholeBody (different domain) didn't — same lesson, both directions.
-11. **On thin data, scale data not parameters.** +WLASL gave a real +2.8 pts; bigger
-    models stayed inside the noise. Next lever is MS-ASL (more data), not more params.
+11. **On thin data, scale data not parameters — but only *clean* data.** +WLASL
+    (clean signing video) gave a real +2.8 pts; bigger models stayed inside the noise.
+    MS-ASL (raw YouTube) **doubled the data and made it worse** (test ~−2, val ~−2.7,
+    3-seed) — noisy front-end geometry adds label noise. More data only helps when its
+    geometry is trustworthy.
 """),
 ]
 
