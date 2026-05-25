@@ -72,7 +72,6 @@ export function PracticePage() {
     mean: [...PLACEHOLDER_NORM.mean],
     std: [...PLACEHOLDER_NORM.std],
   }));
-  const [dbg, setDbg] = useState('');
 
   const current = deck[deckIndex] ?? null;
 
@@ -86,22 +85,6 @@ export function PracticePage() {
   useEffect(() => {
     if (cam === 'ready' && step === 'ready' && recordedOnceRef.current) resume();
   }, [cam, step, deckIndex, attemptNumber, resume]);
-
-  // TEMP debug: poll the <video>/stream state so we can see what blanks the preview.
-  useEffect(() => {
-    const id = setInterval(() => {
-      const v = videoRef.current;
-      if (!v) return setDbg('no <video> element');
-      const ms = v.srcObject as MediaStream | null;
-      const tr = ms?.getVideoTracks?.()[0];
-      setDbg(
-        `cam=${cam} step=${step} | paused=${v.paused} ready=${v.readyState} ` +
-        `${v.videoWidth}x${v.videoHeight} | srcObject=${ms ? 'set' : 'null'} ` +
-        `track=${tr ? tr.readyState : 'none'} enabled=${tr?.enabled} muted=${tr?.muted}`,
-      );
-    }, 400);
-    return () => clearInterval(id);
-  }, [cam, step]);
 
   // Load the model's mean/std so the input tensor matches training.
   useEffect(() => {
@@ -315,11 +298,6 @@ export function PracticePage() {
       </div>
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
-
-      {/* TEMP camera debug */}
-      <pre style={{ fontSize: 10, color: '#888', whiteSpace: 'pre-wrap', margin: '4px 0', lineHeight: 1.4 }}>
-        {dbg}
-      </pre>
 
       {cam === 'ready' && step !== 'result' && (
         <div className="btn-row">
