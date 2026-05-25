@@ -5,7 +5,7 @@ flow_norm: artifacts/manifest/norm_roi_flow.json
 manifest: artifacts/manifest/manifest.json
 
 two_stream: true
-pretrained_encoder: artifacts/checkpoints/pretrain/encoder.pt
+pretrained_encoder: artifacts/checkpoints/pretrain_1500/encoder.pt   # best (1500-class) encoder
 
 head: attn
 emb: 384

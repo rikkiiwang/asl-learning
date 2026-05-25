@@ -1,0 +1,25 @@
+# Freeze-encoder sweep: discriminative LR, encoder at 0.1x the head LR.
+cache: artifacts/cache/clips_roi.npz
+norm: artifacts/manifest/norm_roi.json
+manifest: artifacts/manifest/manifest.json
+
+pretrained_encoder: artifacts/checkpoints/pretrain_1500/encoder.pt
+encoder_lr_scale: 0.1
+
+head: attn
+emb: 384
+width: 48
+dropout: 0.3
+tf_layers: 1
+tf_heads: 4
+
+epochs: 60
+batch_size: 32
+lr: 0.0015
+weight_decay: 0.05
+warmup_epochs: 3
+label_smoothing: 0.1
+early_stop_patience: 12
+seed: 1337
+
+out_dir: artifacts/checkpoints/ft1500_lr0p1
