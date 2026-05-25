@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MODELS, DEFAULT_MODEL_ID, getModelById } from './models';
+import { MODELS, DEFAULT_MODEL_ID, getModelById, selectableModels } from './models';
 
 describe('model registry', () => {
   it('includes the from-scratch own model and a baseline comparison model', () => {
@@ -23,5 +23,19 @@ describe('model registry', () => {
   it('falls back to the default for unknown or missing ids', () => {
     expect(getModelById('nope').id).toBe(DEFAULT_MODEL_ID);
     expect(getModelById(null).id).toBe(DEFAULT_MODEL_ID);
+  });
+});
+
+describe('selectableModels (Req 7 gating)', () => {
+  it('excludes the pretrained baseline when dev tools are off', () => {
+    const ids = selectableModels(false).map((m) => m.id);
+    expect(ids).not.toContain('baseline');
+    expect(selectableModels(false).every((m) => m.kind === 'own')).toBe(true);
+  });
+  it('includes the baseline when dev tools are on', () => {
+    expect(selectableModels(true).map((m) => m.id)).toContain('baseline');
+  });
+  it('refuses a stale baseline id when baseline is not selectable', () => {
+    expect(getModelById('baseline', false).id).toBe(DEFAULT_MODEL_ID);
   });
 });

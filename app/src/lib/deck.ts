@@ -24,3 +24,12 @@ export function buildDeck(
   }
   return [...unmastered, ...mastered].slice(0, size);
 }
+
+/**
+ * A one-sign deck for the "Practice this" deep-link from the vocab map.
+ * Returns `[]` when the id is unknown so the caller can fall back to buildDeck.
+ */
+export function targetedDeck(signs: Sign[], signId: string): Sign[] {
+  const match = signs.find((s) => s.id === signId);
+  return match ? [match] : [];
+}

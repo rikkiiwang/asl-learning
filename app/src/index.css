@@ -459,3 +459,62 @@ select:focus {
 .spacer-top {
   margin-top: 16px;
 }
+
+/* ---------- vocabulary map ---------- */
+.sign-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+}
+.sign-tile {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 10px;
+  background: var(--card-bg);
+  border: 2px solid var(--seg-togo);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  font: 600 13px var(--font);
+  color: var(--text);
+  text-align: left;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.sign-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(109, 74, 255, 0.18);
+}
+.sign-tile-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+}
+.sign-tile-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- modal ---------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 31, 74, 0.38);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 60;
+}
+.modal-card {
+  background: var(--card-bg-solid);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 40px rgba(42, 31, 74, 0.28);
+  padding: 22px;
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+}

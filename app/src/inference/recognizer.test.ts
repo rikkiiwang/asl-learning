@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { StubRecognizer, createRecognizer } from './recognizer';
+import { StubRecognizer, OnnxRecognizer, createRecognizer } from './recognizer';
 import { MODELS } from '../lib/models';
 
 describe('StubRecognizer', () => {
@@ -24,8 +24,14 @@ describe('StubRecognizer', () => {
 });
 
 describe('createRecognizer', () => {
-  it('falls back to a stub (correct class count) while no model URLs are configured', async () => {
-    const logits = await createRecognizer(MODELS[0], 75).recognize(new Float32Array(10));
+  it('uses the ONNX recognizer for a model with a configured artifact URL (own-v1)', () => {
+    const ownV1 = MODELS.find((m) => m.id === 'own-v1')!;
+    expect(createRecognizer(ownV1, 75)).toBeInstanceOf(OnnxRecognizer);
+  });
+
+  it('falls back to a stub (correct class count) for a model with no configured URL', async () => {
+    const noUrl = MODELS.find((m) => m.id === 'own-v2')!; // no artifact published yet
+    const logits = await createRecognizer(noUrl, 75).recognize(new Float32Array(10));
     expect(logits.length).toBe(75);
   });
 });

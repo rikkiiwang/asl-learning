@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import { MODELS, DEFAULT_MODEL_ID, getModelById, type ModelOption } from '../lib/models';
+import { DEFAULT_MODEL_ID, getModelById, selectableModels, type ModelOption } from '../lib/models';
+import { devToolsEnabled } from '../lib/devTools';
 
 const STORAGE_KEY = 'asl.activeModel';
 
@@ -29,9 +30,12 @@ export function ModelProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const selected = getModelById(selectedId);
+  // Req 7: the pretrained baseline is only selectable with dev tools on.
+  const devTools = devToolsEnabled();
+  const models = selectableModels(devTools);
+  const selected = getModelById(selectedId, devTools);
   return (
-    <ModelContext.Provider value={{ models: MODELS, selected, setSelectedId }}>
+    <ModelContext.Provider value={{ models, selected, setSelectedId }}>
       {children}
     </ModelContext.Provider>
   );

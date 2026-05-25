@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useCamera } from '../camera/useCamera';
 import { sampleMeanLuminance } from '../camera/sampleLuminance';
 import { assessBrightness, type BrightnessStatus } from '../lib/camera';
@@ -8,9 +8,13 @@ import { framesToTensor } from '../lib/clipTensor';
 import { softmax, topK } from '../lib/inference';
 import { decidePassFail, type Decision } from '../lib/decision';
 import { buildHint } from '../lib/hints';
-import { buildDeck } from '../lib/deck';
+import { buildDeck, targetedDeck } from '../lib/deck';
 import { wordOutcome, buildAttemptRow, type WordOutcome } from '../lib/session';
 import { readPending, addPending, clearPending } from '../lib/pendingAttempts';
+import { localMidnightISO } from '../lib/time';
+import { computeStreak } from '../lib/streak';
+import { goalProgress } from '../lib/dailyGoal';
+import { SessionComplete } from '../components/SessionComplete';
 import { createRecognizer } from '../inference/recognizer';
 import { useModel } from '../models/ModelProvider';
 import { useSession } from '../auth/SessionProvider';
@@ -41,10 +45,13 @@ const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 export function PracticePage() {
   const { session: authSession, loading: authLoading } = useSession();
+  const [searchParams] = useSearchParams();
+  const targetSignId = searchParams.get('sign');
   const { selected } = useModel();
-  const { videoRef, state: cam, error: camError, start } = useCamera();
+  const { videoRef, attachVideo, state: cam, error: camError, start, resume } = useCamera();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const initRef = useRef(false);
+  const recordedOnceRef = useRef(false);
 
   const [phase, setPhase] = useState<Phase>('loading');
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -58,12 +65,36 @@ export function PracticePage() {
   const [brightness, setBrightness] = useState<BrightnessStatus | null>(null);
   const [result, setResult] = useState<AttemptResult | null>(null);
   const [stats, setStats] = useState({ completed: 0, passed: 0 });
+  const [finishInfo, setFinishInfo] = useState({ streak: 0, goalClosed: false });
+  // Normalization for the real model; loaded from meta.json (falls back to the
+  // placeholder for the stub recognizer, which ignores exact values).
+  const [norm, setNorm] = useState<{ mean: number[]; std: number[] }>(() => ({
+    mean: [...PLACEHOLDER_NORM.mean],
+    std: [...PLACEHOLDER_NORM.std],
+  }));
 
   const current = deck[deckIndex] ?? null;
 
   useEffect(() => {
     void start();
   }, [start]);
+
+  // The <video> can blank AFTER the first capture, so re-bind the live stream when
+  // we return to a ready state — but only once a recording has happened, so we
+  // don't race the camera's own initial attach on mount (which works on its own).
+  useEffect(() => {
+    if (cam === 'ready' && step === 'ready' && recordedOnceRef.current) resume();
+  }, [cam, step, deckIndex, attemptNumber, resume]);
+
+  // Load the model's mean/std so the input tensor matches training.
+  useEffect(() => {
+    void fetch('/models/meta.json')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((m) => {
+        if (m?.input?.mean && m?.input?.std) setNorm({ mean: m.input.mean, std: m.input.std });
+      })
+      .catch(() => {/* keep placeholder if meta is unavailable */});
+  }, []);
 
   // One-time session init once auth is resolved.
   useEffect(() => {
@@ -95,12 +126,14 @@ export function PracticePage() {
       ]);
       const signs = (signsRes.data ?? []) as Sign[];
       setByClassIndex(new Map(signs.map((s) => [s.model_class_index, s])));
-      setDeck(buildDeck(signs, (masteryRes.data ?? []) as SignMastery[], DECK_SIZE));
+      // Deep-link from the vocab map (?sign=…) practices just that sign; otherwise the normal deck.
+      const focused = targetSignId ? targetedDeck(signs, targetSignId) : [];
+      setDeck(focused.length ? focused : buildDeck(signs, (masteryRes.data ?? []) as SignMastery[], DECK_SIZE));
       setUserId(uid);
       setSessionId(created.data.id);
       setPhase('practicing');
     })();
-  }, [authLoading, authSession]);
+  }, [authLoading, authSession, targetSignId]);
 
   useEffect(() => {
     if (cam !== 'ready' || step === 'recording') return;
@@ -123,33 +156,41 @@ export function PracticePage() {
     }
 
     setStep('recording');
+    recordedOnceRef.current = true; // enable preview re-bind on subsequent attempts
     const clip = await recordClip(videoRef.current, { durationMs: 3000 });
 
     setStep('predicting');
-    const tensor = framesToTensor(clip.frames, clip.size, PLACEHOLDER_NORM.mean, PLACEHOLDER_NORM.std);
-    const recognizer = createRecognizer(selected, byClassIndex.size || 75);
-    const probs = softmax(await recognizer.recognize(tensor));
+    try {
+      const tensor = framesToTensor(clip.frames, clip.size, norm.mean, norm.std);
+      const recognizer = createRecognizer(selected, byClassIndex.size || 75);
+      const probs = softmax(await recognizer.recognize(tensor));
 
-    const promptIndex = current.model_class_index;
-    const decision = decidePassFail(probs, promptIndex);
-    const predicted = byClassIndex.get(decision.predictedIndex) ?? null;
-    const outcome = wordOutcome(attemptNumber, decision.pass);
-    const hint = decision.pass
-      ? null
-      : buildHint({ failReason: decision.failReason!, promptedLabel: current.label, competitorLabel: predicted?.label ?? null });
-    const top = topK(probs, 3).map((r) => ({ label: byClassIndex.get(r.index)?.label ?? `class ${r.index}`, prob: r.prob }));
+      const promptIndex = current.model_class_index;
+      const decision = decidePassFail(probs, promptIndex);
+      const predicted = byClassIndex.get(decision.predictedIndex) ?? null;
+      const outcome = wordOutcome(attemptNumber, decision.pass);
+      const hint = decision.pass
+        ? null
+        : buildHint({ failReason: decision.failReason!, promptedLabel: current.label, competitorLabel: predicted?.label ?? null });
+      const top = topK(probs, 3).map((r) => ({ label: byClassIndex.get(r.index)?.label ?? `class ${r.index}`, prob: r.prob }));
 
-    // Persist (fires the mastery trigger). Never block the loop on a write error.
-    const row = buildAttemptRow({ userId, sessionId, signId: current.id, attemptNumber, decision, predictedSignId: predicted?.id ?? null });
-    supabase.from('attempts').insert(row).then(({ error }) => {
-      if (error) {
-        console.warn('attempt write failed, queued for retry:', error.message);
-        addPending(row);
-      }
-    });
+      // Persist (fires the mastery trigger). Never block the loop on a write error.
+      const row = buildAttemptRow({ userId, sessionId, signId: current.id, attemptNumber, decision, predictedSignId: predicted?.id ?? null });
+      supabase.from('attempts').insert(row).then(({ error }) => {
+        if (error) {
+          console.warn('attempt write failed, queued for retry:', error.message);
+          addPending(row);
+        }
+      });
 
-    setResult({ decision, outcome, hint, top });
-    setStep('result');
+      setResult({ decision, outcome, hint, top });
+      setStep('result');
+    } catch (e) {
+      // Surface inference failures instead of hanging on "recognizing" forever.
+      console.error('inference failed:', e);
+      window.alert('Recognition failed: ' + (e instanceof Error ? e.message : String(e)));
+      setStep('ready');
+    }
   }
 
   function advance(passed: boolean) {
@@ -171,7 +212,16 @@ export function PracticePage() {
   }
 
   async function finish() {
-    if (sessionId) await supabase.from('sessions').update({ ended_at: new Date().toISOString() }).eq('id', sessionId);
+    if (sessionId && userId) {
+      await supabase.from('sessions').update({ ended_at: new Date().toISOString() }).eq('id', sessionId);
+      const [sessionsRes, todayRes] = await Promise.all([
+        supabase.from('sessions').select('started_at'),
+        supabase.from('attempts').select('sign_id').gte('created_at', localMidnightISO()),
+      ]);
+      const streak = computeStreak(((sessionsRes.data ?? []) as { started_at: string }[]).map((s) => s.started_at));
+      const practiced = new Set(((todayRes.data ?? []) as { sign_id: string }[]).map((a) => a.sign_id)).size;
+      setFinishInfo({ streak, goalClosed: goalProgress(practiced).complete });
+    }
     setPhase('finished');
   }
 
@@ -185,19 +235,12 @@ export function PracticePage() {
     );
   if (phase === 'finished')
     return (
-      <main className="page" style={{ textAlign: 'center' }}>
-        <h1 className="page-title" style={{ fontSize: 28 }}>
-          Session complete 🎉
-        </h1>
-        <p className="spacer-top" style={{ fontSize: 18 }}>
-          Passed <strong>{stats.passed}</strong> of <strong>{stats.completed}</strong> words.
-        </p>
-        <div className="spacer-top">
-          <Link to="/" className="btn btn-primary">
-            ← Back to dashboard
-          </Link>
-        </div>
-      </main>
+      <SessionComplete
+        passed={stats.passed}
+        completed={stats.completed}
+        streak={finishInfo.streak}
+        goalClosed={finishInfo.goalClosed}
+      />
     );
 
   const busy = step === 'counting' || step === 'recording' || step === 'predicting';
@@ -234,7 +277,7 @@ export function PracticePage() {
       )}
 
       <div className="video-wrap" style={{ display: cam === 'ready' ? 'block' : 'none' }}>
-        <video ref={videoRef} muted playsInline />
+        <video ref={attachVideo} muted playsInline />
         <div aria-hidden className="frame-guide" />
         {step === 'counting' && (
           <div className="overlay-center">
@@ -296,7 +339,14 @@ function ResultCard({
       {hint && <p className="hint">💡 {hint}</p>}
       {outcome === 'reveal' && (
         <p className="muted" style={{ fontSize: 13 }}>
-          Here’s the reference for <strong>{label}</strong> — (reference clips arrive with the dataset; M6.)
+          Want to see how it’s signed?{' '}
+          <a
+            href={`https://www.signingsavvy.com/search/${encodeURIComponent(label.toLowerCase())}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Watch a reference for <strong>{label}</strong> ↗
+          </a>
         </p>
       )}
 

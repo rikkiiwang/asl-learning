@@ -38,6 +38,21 @@ export const MODELS: ModelOption[] = [
 
 export const DEFAULT_MODEL_ID = 'own-v1';
 
-export function getModelById(id: string | null | undefined): ModelOption {
-  return MODELS.find((m) => m.id === id) ?? MODELS.find((m) => m.id === DEFAULT_MODEL_ID)!;
+/**
+ * Models the user may select. The pretrained `baseline` is dev/eval only
+ * (Req 7) and is excluded unless dev tools are enabled, so the graded build
+ * cannot route recognition through a pretrained model.
+ */
+export function selectableModels(includeBaseline: boolean): ModelOption[] {
+  return includeBaseline ? MODELS : MODELS.filter((m) => m.kind === 'own');
+}
+
+/**
+ * Resolve a model id to an option. When `includeBaseline` is false, a stale
+ * `baseline` id (e.g. left in localStorage) resolves to the default so it can't
+ * reactivate the pretrained path.
+ */
+export function getModelById(id: string | null | undefined, includeBaseline = true): ModelOption {
+  const pool = selectableModels(includeBaseline);
+  return pool.find((m) => m.id === id) ?? pool.find((m) => m.id === DEFAULT_MODEL_ID)!;
 }

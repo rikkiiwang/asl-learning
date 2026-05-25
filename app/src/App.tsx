@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { PracticePage } from './pages/PracticePage';
+import { VocabMapPage } from './pages/VocabMapPage';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 
 export default function App() {
@@ -21,6 +22,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <PracticePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/map"
+        element={
+          <ProtectedRoute>
+            <VocabMapPage />
           </ProtectedRoute>
         }
       />

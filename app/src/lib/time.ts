@@ -11,3 +11,8 @@ export function timeAgo(input: string | Date, now: Date = new Date()): string {
   if (day < 7) return `${day}d ago`;
   return then.toLocaleDateString();
 }
+
+/** UTC ISO string for local midnight of `now`'s calendar day (for "since today" queries). */
+export function localMidnightISO(now: Date = new Date()): string {
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).toISOString();
+}

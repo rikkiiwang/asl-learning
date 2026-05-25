@@ -1,0 +1,703 @@
+{
+  "version": "v1",
+  "input": {
+    "frames": 16,
+    "window_seconds": 3.0,
+    "size": 112,
+    "resample": "uniform",
+    "layout": "NFCHW",
+    "mean": [
+      0.4636639894898261,
+      0.40366237732231297,
+      0.3874323114792692
+    ],
+    "std": [
+      0.27481583630942963,
+      0.2526443777040949,
+      0.24246954713218008
+    ]
+  },
+  "num_classes": 75,
+  "labels": [
+    "ANGRY",
+    "APPLE",
+    "BABY",
+    "BANANA",
+    "BIG",
+    "BIRD",
+    "BLACK",
+    "BLUE",
+    "BOOK",
+    "BOY",
+    "BREAD",
+    "BROTHER",
+    "CAT",
+    "CHILD",
+    "COLD",
+    "COMPUTER",
+    "COOK",
+    "COW",
+    "DOG",
+    "DOOR",
+    "DRINK",
+    "EAT",
+    "FINISH",
+    "FISH",
+    "GO",
+    "GOOD",
+    "GREEN",
+    "HAPPY",
+    "HELLO",
+    "HELP",
+    "HORSE",
+    "HOT",
+    "HOW",
+    "HUNGRY",
+    "KNOW",
+    "LEARN",
+    "MAN",
+    "MILK",
+    "MORNING",
+    "MOTHER",
+    "NAME",
+    "NIGHT",
+    "NO",
+    "ORANGE",
+    "PAPER",
+    "PEN",
+    "PENCIL",
+    "PINK",
+    "PLAY",
+    "PLEASE",
+    "PURPLE",
+    "RED",
+    "SICK",
+    "SISTER",
+    "SMALL",
+    "SORRY",
+    "TABLE",
+    "TIME",
+    "TODAY",
+    "TOMORROW",
+    "UNDERSTAND",
+    "WANT",
+    "WEEK",
+    "WELCOME",
+    "WHAT",
+    "WHEN",
+    "WHERE",
+    "WHICH",
+    "WHO",
+    "WHY",
+    "WOMAN",
+    "WORK",
+    "YEAR",
+    "YELLOW",
+    "YES"
+  ],
+  "thresholds": {
+    "ANGRY": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "APPLE": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "BABY": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "BANANA": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "BIG": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "BIRD": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "BLACK": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "BLUE": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "BOOK": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "BOY": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "BREAD": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "BROTHER": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "CAT": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "CHILD": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "COLD": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "COMPUTER": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "COOK": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "COW": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "DOG": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "DOOR": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "DRINK": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "EAT": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "FINISH": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "FISH": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "GO": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "GOOD": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "GREEN": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "HAPPY": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "HELLO": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "HELP": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "HORSE": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "HOT": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "HOW": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "HUNGRY": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "KNOW": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "LEARN": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "MAN": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "MILK": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "MORNING": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "MOTHER": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "NAME": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "NIGHT": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "NO": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "ORANGE": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "PAPER": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "PEN": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "PENCIL": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "PINK": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "PLAY": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "PLEASE": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "PURPLE": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "RED": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "SICK": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "SISTER": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "SMALL": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "SORRY": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "TABLE": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "TIME": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "TODAY": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "TOMORROW": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "UNDERSTAND": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "WANT": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "WEEK": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "WELCOME": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "WHAT": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "WHEN": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "WHERE": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "WHICH": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "WHO": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "WHY": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "WOMAN": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "WORK": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "YEAR": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "YELLOW": {
+      "t": 0.0,
+      "margin": 0.0
+    },
+    "YES": {
+      "t": 0.0,
+      "margin": 0.0
+    }
+  },
+  "hints": {
+    "ANGRY": {
+      "category": "descriptors_feelings",
+      "gloss": "ANGRY"
+    },
+    "APPLE": {
+      "category": "food_drink",
+      "gloss": "APPLE"
+    },
+    "BABY": {
+      "category": "people_family",
+      "gloss": "BABY1"
+    },
+    "BANANA": {
+      "category": "food_drink",
+      "gloss": "BANANA1"
+    },
+    "BIG": {
+      "category": "descriptors_feelings",
+      "gloss": "BIG"
+    },
+    "BIRD": {
+      "category": "animals",
+      "gloss": "BIRD"
+    },
+    "BLACK": {
+      "category": "colors",
+      "gloss": "BLACK"
+    },
+    "BLUE": {
+      "category": "colors",
+      "gloss": "BLUE"
+    },
+    "BOOK": {
+      "category": "school_objects",
+      "gloss": "BOOK"
+    },
+    "BOY": {
+      "category": "people_family",
+      "gloss": "BOY"
+    },
+    "BREAD": {
+      "category": "food_drink",
+      "gloss": "BREAD"
+    },
+    "BROTHER": {
+      "category": "people_family",
+      "gloss": "BROTHER"
+    },
+    "CAT": {
+      "category": "animals",
+      "gloss": "CAT1"
+    },
+    "CHILD": {
+      "category": "people_family",
+      "gloss": "CHILD"
+    },
+    "COLD": {
+      "category": "descriptors_feelings",
+      "gloss": "COLD"
+    },
+    "COMPUTER": {
+      "category": "school_objects",
+      "gloss": "COMPUTER"
+    },
+    "COOK": {
+      "category": "food_drink",
+      "gloss": "COOK"
+    },
+    "COW": {
+      "category": "animals",
+      "gloss": "COW"
+    },
+    "DOG": {
+      "category": "animals",
+      "gloss": "DOG1"
+    },
+    "DOOR": {
+      "category": "school_objects",
+      "gloss": "DOOR"
+    },
+    "DRINK": {
+      "category": "food_drink",
+      "gloss": "DRINK1"
+    },
+    "EAT": {
+      "category": "food_drink",
+      "gloss": "EAT1"
+    },
+    "FINISH": {
+      "category": "common_verbs",
+      "gloss": "FINISH"
+    },
+    "FISH": {
+      "category": "animals",
+      "gloss": "FISH"
+    },
+    "GO": {
+      "category": "common_verbs",
+      "gloss": "GO"
+    },
+    "GOOD": {
+      "category": "descriptors_feelings",
+      "gloss": "GOOD"
+    },
+    "GREEN": {
+      "category": "colors",
+      "gloss": "GREEN"
+    },
+    "HAPPY": {
+      "category": "descriptors_feelings",
+      "gloss": "HAPPY"
+    },
+    "HELLO": {
+      "category": "greetings_social",
+      "gloss": "HELLO"
+    },
+    "HELP": {
+      "category": "greetings_social",
+      "gloss": "HELP"
+    },
+    "HORSE": {
+      "category": "animals",
+      "gloss": "HORSE"
+    },
+    "HOT": {
+      "category": "descriptors_feelings",
+      "gloss": "HOT"
+    },
+    "HOW": {
+      "category": "pronouns_question",
+      "gloss": "HOW1"
+    },
+    "HUNGRY": {
+      "category": "food_drink",
+      "gloss": "HUNGRY"
+    },
+    "KNOW": {
+      "category": "common_verbs",
+      "gloss": "KNOW"
+    },
+    "LEARN": {
+      "category": "common_verbs",
+      "gloss": "LEARN"
+    },
+    "MAN": {
+      "category": "people_family",
+      "gloss": "MAN"
+    },
+    "MILK": {
+      "category": "food_drink",
+      "gloss": "MILK1"
+    },
+    "MORNING": {
+      "category": "time_days",
+      "gloss": "MORNING"
+    },
+    "MOTHER": {
+      "category": "people_family",
+      "gloss": "MOTHER"
+    },
+    "NAME": {
+      "category": "greetings_social",
+      "gloss": "NAME"
+    },
+    "NIGHT": {
+      "category": "time_days",
+      "gloss": "NIGHT1"
+    },
+    "NO": {
+      "category": "greetings_social",
+      "gloss": "NO"
+    },
+    "ORANGE": {
+      "category": "colors",
+      "gloss": "ORANGE"
+    },
+    "PAPER": {
+      "category": "school_objects",
+      "gloss": "PAPER"
+    },
+    "PEN": {
+      "category": "school_objects",
+      "gloss": "PEN"
+    },
+    "PENCIL": {
+      "category": "school_objects",
+      "gloss": "PENCIL"
+    },
+    "PINK": {
+      "category": "colors",
+      "gloss": "PINK"
+    },
+    "PLAY": {
+      "category": "common_verbs",
+      "gloss": "PLAY"
+    },
+    "PLEASE": {
+      "category": "greetings_social",
+      "gloss": "PLEASE"
+    },
+    "PURPLE": {
+      "category": "colors",
+      "gloss": "PURPLE"
+    },
+    "RED": {
+      "category": "colors",
+      "gloss": "RED"
+    },
+    "SICK": {
+      "category": "descriptors_feelings",
+      "gloss": "SICK"
+    },
+    "SISTER": {
+      "category": "people_family",
+      "gloss": "SISTER"
+    },
+    "SMALL": {
+      "category": "descriptors_feelings",
+      "gloss": "SMALL"
+    },
+    "SORRY": {
+      "category": "greetings_social",
+      "gloss": "SORRY"
+    },
+    "TABLE": {
+      "category": "school_objects",
+      "gloss": "TABLE"
+    },
+    "TIME": {
+      "category": "time_days",
+      "gloss": "TIME"
+    },
+    "TODAY": {
+      "category": "time_days",
+      "gloss": "TODAY"
+    },
+    "TOMORROW": {
+      "category": "time_days",
+      "gloss": "TOMORROW"
+    },
+    "UNDERSTAND": {
+      "category": "common_verbs",
+      "gloss": "UNDERSTAND"
+    },
+    "WANT": {
+      "category": "common_verbs",
+      "gloss": "WANT1"
+    },
+    "WEEK": {
+      "category": "time_days",
+      "gloss": "WEEK"
+    },
+    "WELCOME": {
+      "category": "greetings_social",
+      "gloss": "WELCOME1"
+    },
+    "WHAT": {
+      "category": "pronouns_question",
+      "gloss": "WHAT1"
+    },
+    "WHEN": {
+      "category": "pronouns_question",
+      "gloss": "WHEN"
+    },
+    "WHERE": {
+      "category": "pronouns_question",
+      "gloss": "WHERE"
+    },
+    "WHICH": {
+      "category": "pronouns_question",
+      "gloss": "WHICH"
+    },
+    "WHO": {
+      "category": "pronouns_question",
+      "gloss": "WHO"
+    },
+    "WHY": {
+      "category": "pronouns_question",
+      "gloss": "WHY"
+    },
+    "WOMAN": {
+      "category": "people_family",
+      "gloss": "WOMAN1"
+    },
+    "WORK": {
+      "category": "common_verbs",
+      "gloss": "WORK"
+    },
+    "YEAR": {
+      "category": "time_days",
+      "gloss": "YEAR"
+    },
+    "YELLOW": {
+      "category": "colors",
+      "gloss": "YELLOW"
+    },
+    "YES": {
+      "category": "greetings_social",
+      "gloss": "YES"
+    }
+  },
+  "notes": "thresholds are placeholders until Phase 4 calibration"
+}

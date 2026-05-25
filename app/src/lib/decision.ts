@@ -3,6 +3,7 @@ export type FailReason = 'wrong_sign' | 'low_confidence' | 'ambiguous';
 export interface Thresholds {
   threshold: number; // min P(prompted) to pass
   margin: number; // min (P1 - P2) to pass
+  passTopN?: number; // prompted must rank within the top-N predictions (default 1)
 }
 
 export interface Decision {
@@ -14,14 +15,18 @@ export interface Decision {
   failReason: FailReason | null;
 }
 
-// Placeholder until per-class thresholds arrive in meta.json (M5/M7).
-// Conservative: bias against false passes (PRD Req 9).
-export const DEFAULT_THRESHOLDS: Thresholds = { threshold: 0.6, margin: 0.15 };
+// Pass policy: the prompted sign must rank within the model's TOP-3 predictions.
+// Rationale: on held-out signers the model puts the right sign in its top-3 ~86%
+// of the time (vs ~73% top-1) — a fairer bar for a learning app than exact top-1.
+// Confidence/margin gating stays disabled (0/0): the label-smoothed 75-way model
+// sits below a 0.6 bar even when right. Re-tighten via calibrated thresholds in
+// meta.json once live confidence is trustworthy.
+export const DEFAULT_THRESHOLDS: Thresholds = { threshold: 0, margin: 0, passTopN: 3 };
 
 /**
- * Conservative pass/fail (spec §4): pass iff the prompted class is the argmax,
- * its probability clears `threshold`, AND it leads the runner-up by `margin`.
- * Otherwise classify why it failed, to drive a targeted hint.
+ * Pass/fail: pass iff the prompted class ranks within the top `passTopN`
+ * predictions (default 1), its probability clears `threshold`, AND it leads the
+ * runner-up by `margin`. Otherwise classify why it failed, to drive a targeted hint.
  */
 export function decidePassFail(
   probs: ArrayLike<number>,
@@ -45,8 +50,13 @@ export function decidePassFail(
   const promptedProb = probs[promptedIndex] ?? 0;
   const margin = top1 - top2;
 
+  // Rank of the prompted class = how many classes score strictly higher (0 = top-1).
+  let rank = 0;
+  for (let i = 0; i < probs.length; i++) if (probs[i] > promptedProb) rank++;
+  const topN = thr.passTopN ?? 1;
+
   let failReason: FailReason | null = null;
-  if (topIdx !== promptedIndex) failReason = 'wrong_sign';
+  if (rank >= topN) failReason = 'wrong_sign';
   else if (promptedProb < thr.threshold) failReason = 'low_confidence';
   else if (margin < thr.margin) failReason = 'ambiguous';
 

@@ -16,6 +16,9 @@ export function useCamera() {
   }, []);
 
   const start = useCallback(async () => {
+    // Release any prior stream first (prevents leaks / "camera busy" black frames).
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
     setError(null);
     setState('requesting');
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -40,8 +43,34 @@ export function useCamera() {
     }
   }, []);
 
+  // Ref callback for the <video>: whenever the element (re)mounts, immediately
+  // re-attach the live stream. This is the robust fix for the element being
+  // remounted between attempts — a fresh <video> has no srcObject, so binding it
+  // here (rather than once in start) guarantees the preview survives remounts.
+  const attachVideo = useCallback((el: HTMLVideoElement | null) => {
+    videoRef.current = el;
+    const s = streamRef.current;
+    if (el && s && s.getVideoTracks()[0]?.readyState === 'live') {
+      el.srcObject = s;
+      void el.play().catch(() => undefined);
+    }
+  }, []);
+
+  // Ensure a live preview: re-bind if the stream is still live, else re-acquire it.
+  const resume = useCallback(() => {
+    const v = videoRef.current;
+    const s = streamRef.current;
+    const live = !!s && s.getVideoTracks()[0]?.readyState === 'live';
+    if (v && s && live) {
+      v.srcObject = s;
+      void v.play().catch(() => undefined);
+    } else {
+      void start(); // stream stopped/lost — re-acquire the camera
+    }
+  }, [start]);
+
   // Always release the camera when the component unmounts.
   useEffect(() => () => stop(), [stop]);
 
-  return { videoRef, state, error, start, stop };
+  return { videoRef, attachVideo, state, error, start, stop, resume };
 }
