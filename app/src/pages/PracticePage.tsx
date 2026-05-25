@@ -78,10 +78,10 @@ export function PracticePage() {
     void start();
   }, [start]);
 
-  // Keep the live preview alive when a new word/attempt becomes ready — some
-  // browsers pause the <video> between attempts, leaving a black frame.
+  // Keep the live preview alive across attempts — the <video> can blank after the
+  // first capture, so re-bind the stream on every non-recording state transition.
   useEffect(() => {
-    if (cam === 'ready' && step === 'ready') resume();
+    if (cam === 'ready' && step !== 'recording') resume();
   }, [cam, step, deckIndex, attemptNumber, resume]);
 
   // Load the model's mean/std so the input tensor matches training.

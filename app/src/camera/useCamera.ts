@@ -45,10 +45,13 @@ export function useCamera() {
   // word starts keeps the preview alive.
   const resume = useCallback(() => {
     const v = videoRef.current;
-    if (v && streamRef.current) {
-      if (v.srcObject !== streamRef.current) v.srcObject = streamRef.current;
-      void v.play().catch(() => undefined);
-    }
+    const s = streamRef.current;
+    if (!v || !s) return;
+    // Re-bind the live stream UNCONDITIONALLY. A preview that blanked after the
+    // first capture won't recover from play() alone; re-assigning srcObject forces
+    // the element back onto the live stream.
+    v.srcObject = s;
+    void v.play().catch(() => undefined);
   }, []);
 
   // Always release the camera when the component unmounts.
