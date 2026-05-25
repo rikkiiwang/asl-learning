@@ -14,9 +14,12 @@ export interface Decision {
   failReason: FailReason | null;
 }
 
-// Placeholder until per-class thresholds arrive in meta.json (M5/M7).
-// Conservative: bias against false passes (PRD Req 9).
-export const DEFAULT_THRESHOLDS: Thresholds = { threshold: 0.6, margin: 0.15 };
+// Pass policy: the prompted sign must be the top-1 prediction. Confidence/margin
+// gating is disabled (0/0) for the current model — its label-smoothed 75-way
+// probabilities sit well below a 0.6 bar even when correct, so gating rejected
+// correct answers. Re-enable via calibrated per-class thresholds in meta.json
+// once the model's live confidence is trustworthy (post-ROI calibration).
+export const DEFAULT_THRESHOLDS: Thresholds = { threshold: 0, margin: 0 };
 
 /**
  * Conservative pass/fail (spec §4): pass iff the prompted class is the argmax,
