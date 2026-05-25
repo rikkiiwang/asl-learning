@@ -40,8 +40,19 @@ export function useCamera() {
     }
   }, []);
 
+  // Re-bind the live stream and resume playback without re-acquiring the camera.
+  // Some browsers pause/blank a <video> between attempts; calling this when a new
+  // word starts keeps the preview alive.
+  const resume = useCallback(() => {
+    const v = videoRef.current;
+    if (v && streamRef.current) {
+      if (v.srcObject !== streamRef.current) v.srcObject = streamRef.current;
+      void v.play().catch(() => undefined);
+    }
+  }, []);
+
   // Always release the camera when the component unmounts.
   useEffect(() => () => stop(), [stop]);
 
-  return { videoRef, state, error, start, stop };
+  return { videoRef, state, error, start, stop, resume };
 }

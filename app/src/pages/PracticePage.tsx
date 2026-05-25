@@ -48,7 +48,7 @@ export function PracticePage() {
   const [searchParams] = useSearchParams();
   const targetSignId = searchParams.get('sign');
   const { selected } = useModel();
-  const { videoRef, state: cam, error: camError, start } = useCamera();
+  const { videoRef, state: cam, error: camError, start, resume } = useCamera();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const initRef = useRef(false);
 
@@ -77,6 +77,12 @@ export function PracticePage() {
   useEffect(() => {
     void start();
   }, [start]);
+
+  // Keep the live preview alive when a new word/attempt becomes ready — some
+  // browsers pause the <video> between attempts, leaving a black frame.
+  useEffect(() => {
+    if (cam === 'ready' && step === 'ready') resume();
+  }, [cam, step, deckIndex, attemptNumber, resume]);
 
   // Load the model's mean/std so the input tensor matches training.
   useEffect(() => {
@@ -151,30 +157,37 @@ export function PracticePage() {
     const clip = await recordClip(videoRef.current, { durationMs: 3000 });
 
     setStep('predicting');
-    const tensor = framesToTensor(clip.frames, clip.size, norm.mean, norm.std);
-    const recognizer = createRecognizer(selected, byClassIndex.size || 75);
-    const probs = softmax(await recognizer.recognize(tensor));
+    try {
+      const tensor = framesToTensor(clip.frames, clip.size, norm.mean, norm.std);
+      const recognizer = createRecognizer(selected, byClassIndex.size || 75);
+      const probs = softmax(await recognizer.recognize(tensor));
 
-    const promptIndex = current.model_class_index;
-    const decision = decidePassFail(probs, promptIndex);
-    const predicted = byClassIndex.get(decision.predictedIndex) ?? null;
-    const outcome = wordOutcome(attemptNumber, decision.pass);
-    const hint = decision.pass
-      ? null
-      : buildHint({ failReason: decision.failReason!, promptedLabel: current.label, competitorLabel: predicted?.label ?? null });
-    const top = topK(probs, 3).map((r) => ({ label: byClassIndex.get(r.index)?.label ?? `class ${r.index}`, prob: r.prob }));
+      const promptIndex = current.model_class_index;
+      const decision = decidePassFail(probs, promptIndex);
+      const predicted = byClassIndex.get(decision.predictedIndex) ?? null;
+      const outcome = wordOutcome(attemptNumber, decision.pass);
+      const hint = decision.pass
+        ? null
+        : buildHint({ failReason: decision.failReason!, promptedLabel: current.label, competitorLabel: predicted?.label ?? null });
+      const top = topK(probs, 3).map((r) => ({ label: byClassIndex.get(r.index)?.label ?? `class ${r.index}`, prob: r.prob }));
 
-    // Persist (fires the mastery trigger). Never block the loop on a write error.
-    const row = buildAttemptRow({ userId, sessionId, signId: current.id, attemptNumber, decision, predictedSignId: predicted?.id ?? null });
-    supabase.from('attempts').insert(row).then(({ error }) => {
-      if (error) {
-        console.warn('attempt write failed, queued for retry:', error.message);
-        addPending(row);
-      }
-    });
+      // Persist (fires the mastery trigger). Never block the loop on a write error.
+      const row = buildAttemptRow({ userId, sessionId, signId: current.id, attemptNumber, decision, predictedSignId: predicted?.id ?? null });
+      supabase.from('attempts').insert(row).then(({ error }) => {
+        if (error) {
+          console.warn('attempt write failed, queued for retry:', error.message);
+          addPending(row);
+        }
+      });
 
-    setResult({ decision, outcome, hint, top });
-    setStep('result');
+      setResult({ decision, outcome, hint, top });
+      setStep('result');
+    } catch (e) {
+      // Surface inference failures instead of hanging on "recognizing" forever.
+      console.error('inference failed:', e);
+      window.alert('Recognition failed: ' + (e instanceof Error ? e.message : String(e)));
+      setStep('ready');
+    }
   }
 
   function advance(passed: boolean) {

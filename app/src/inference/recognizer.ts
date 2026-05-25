@@ -49,7 +49,18 @@ export class OnnxRecognizer implements Recognizer {
   private async ensureSession(): Promise<InferenceSession> {
     if (!this.session) {
       const ort = await import('onnxruntime-web');
-      this.session = await ort.InferenceSession.create(this.modelUrl);
+      // Single-threaded WASM: avoids the SharedArrayBuffer / cross-origin-isolation
+      // (COOP/COEP) requirement of the threaded build, which otherwise stalls in a
+      // plain dev server. The model is tiny (~2 MB), so single-thread is plenty.
+      ort.env.wasm.numThreads = 1;
+      // Serve ORT's own .wasm/.mjs from the version-matched CDN. Without this, the
+      // bundler-resolved loader can't locate the wasm in a dev server ("both async
+      // and sync fetching of the wasm failed"). Keep the version in sync with the
+      // onnxruntime-web dependency in package.json.
+      ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.26.0/dist/';
+      this.session = await ort.InferenceSession.create(this.modelUrl, {
+        executionProviders: ['wasm'],
+      });
     }
     return this.session;
   }
