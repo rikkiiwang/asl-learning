@@ -5,7 +5,31 @@ a **from-scratch** computer-vision model recognizes the sign, and you get pass/f
 feedback with hints. Built for a non-commercial research/educational pilot on the
 [ASL Citizen](https://www.microsoft.com/en-us/research/project/asl-citizen/) dataset.
 
-**Live demo:** https://willowy-cactus-5db06d.netlify.app/
+## 👋 For Reviewers — Live Demo
+
+**Live app:** **https://willowy-cactus-5db06d.netlify.app/**
+
+**Reviewer login** — sign in at the live app with:
+- **Email:** `ruijing.wang@challenger.gauntletai.com`
+- **Password:** _provided separately with the course submission_
+
+Then allow camera access and start practicing. (Best on desktop **Chrome** with a webcam.)
+
+**Two from-scratch models to try.** On the dashboard, use the **Recognition model**
+picker to switch the recognizer that scores your signs:
+- **My model v1 (from scratch)** — the shipped recognizer (**73% top-1 / 86% top-3**, held-out).
+- **My model v2 (experimental)** — a 3-stage landmark-geometry pipeline that runs
+  entirely in your browser (**48% top-1 / 69% top-3**; a few seconds per attempt, runs three nets client-side).
+
+**60-second tour:**
+1. Open the link (Chrome), sign in, and allow the camera; you'll land on the dashboard.
+2. Tap **Start practice** — a target sign is prompted.
+3. After the countdown, sign the word fully in frame → you get **pass/fail + the model's top-3**.
+4. Use **📖 Learn signs** to watch how any sign is made, and switch the **Recognition model** to compare v1 vs v2.
+
+**Tips:** good lighting and keeping both hands in frame help a lot; a pass means the
+prompted sign landed in the model's **top-3**. The full build + evaluation story is in
+`model/notebooks/model_story.ipynb` (v1) and `model-v2/notebooks/model_v2_story.ipynb` (v2).
 
 ## Result
 
