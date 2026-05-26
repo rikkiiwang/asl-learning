@@ -10,6 +10,7 @@ import { getV2Recognizer } from '../inference/v2/pipeline';
 import { softmax, topK } from '../lib/inference';
 import { decidePassFail, type Decision } from '../lib/decision';
 import { buildHint } from '../lib/hints';
+import { signingSavvyUrl } from '../lib/signReference';
 import { buildDeck, targetedDeck } from '../lib/deck';
 import { wordOutcome, buildAttemptRow, type WordOutcome } from '../lib/session';
 import { readPending, addPending, clearPending } from '../lib/pendingAttempts';
@@ -351,7 +352,7 @@ function ResultCard({
         <p className="muted" style={{ fontSize: 13 }}>
           Want to see how it’s signed?{' '}
           <a
-            href={`https://www.signingsavvy.com/search/${encodeURIComponent(label.toLowerCase())}`}
+            href={signingSavvyUrl(label)}
             target="_blank"
             rel="noopener noreferrer"
           >

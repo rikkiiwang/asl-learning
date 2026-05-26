@@ -79,6 +79,10 @@ export function DashboardPage() {
             ▶ Start practice
           </Link>
 
+          <Link to="/learn" className="btn btn-ghost btn-block">
+            📖 Learn signs
+          </Link>
+
           <Link to="/map" className="btn btn-ghost btn-block">
             🗺 Vocabulary map
           </Link>

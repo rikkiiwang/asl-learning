@@ -3,6 +3,7 @@ import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { PracticePage } from './pages/PracticePage';
 import { VocabMapPage } from './pages/VocabMapPage';
+import { LearnPage } from './pages/LearnPage';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 
 export default function App() {
@@ -30,6 +31,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <VocabMapPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/learn"
+        element={
+          <ProtectedRoute>
+            <LearnPage />
           </ProtectedRoute>
         }
       />
